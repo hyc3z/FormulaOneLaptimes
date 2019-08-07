@@ -1,6 +1,9 @@
 # F1_Analyz
 
-This project is made with the purpose of analyzing F1 laptimes, provide multiple ways of plotting and showing the laptime difference.
+Wheel-to-wheel battles, pitstops, pushing the car to the limit every single milisecond.
+
+
+This project is made with the purpose of analyzing F1 laptimes, provides multiple ways of plotting and showing the laptime difference.
 
 Data of the project is provided by [ Chris Newell](https://github.com/jcnewell)'s [ergast-f1-api](https://github.com/jcnewell/ergast-f1-api),
 the website is [	https://ergast.com](	https://ergast.com). A big thanks to Chris for the tremendous work, so that precious data of F1 can be utilized.
