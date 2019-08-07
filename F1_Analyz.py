@@ -130,11 +130,36 @@ class f1db:
             print('Error')
         print('Done.',(time.time()-start_time)*1000,'ms')
 
-    def searchRaceID(self,year,round):
+    def getAllYearsRecordedInLaptimes(self):
+        self.cur.execute('select year from races where raceId in (SELECT raceId from lapTimes where lap=1 and position=1 order by raceId asc) group by year order by year asc')
+        return self.cur.fetchall()
+
+    def getAllRaceNameRecordedInLaptimes(self):
+        self.cur.execute('select name from races where raceId in (SELECT raceId from lapTimes where lap=1 and position=1) group by name order by name asc')
+        return self.cur.fetchall()
+
+    def getRacesInAYearRecordedInLaptimes(self,year):
+        self.cur.execute('select name from races where year='+str(year)+' order by name asc')
+        return self.cur.fetchall()
+
+
+    def getRaceIDByYearName(self,year,name):
+        self.cur.execute('SELECT * from races where year='+str(year)+' and name="'+name+'"')
+        return self.cur.fetchall()
+
+    def getRaceIDByYearRound(self,year,round):
         self.cur.execute('SELECT * from races where year='+str(year)+' and round='+str(round))
         return self.cur.fetchall()
 
-    def getLapTimes(self,raceID,savedir):
+    def getDriversByRaceID(self,RaceID):
+        self.cur.execute('select code,forename,surname from drivers where driverId in (SELECT driverId from lapTimes where lap=1 and raceId='+str(RaceID)+') order by forename asc')
+        return self.cur.fetchall()
+
+    def getGridByRaceID(self,raceID):
+        self.cur.execute('select code,forename,surname from drivers where driverId in (select driverId from qualifying where raceId=1021 and driverId in (SELECT driverId from lapTimes where lap=1 and raceId=1021) order by position asc)')
+        return self.cur.fetchall()
+
+    def saveLapTimes(self,raceID,savedir):
         csv = 'Driver'
         self.cur.execute('SELECT max(lap) from lapTimes where raceId='+str(raceID))
         lapcount = self.cur.fetchall()[0]['max(lap)']
@@ -174,16 +199,16 @@ class f1db:
         f.write(csv)
         print(os.path.join(savedir,str(filename_raw[0]['year']),filename),'Done')
 
-    def getLaptimesALL(self,save_dir):
+    def saveLaptimesALL(self,save_dir):
         self.cur.execute('SELECT raceId from lapTimes where lap=1 and position=1 order by raceId asc')
         raceIds = self.cur.fetchall()
         for i in raceIds:
-            self.getLapTimes(i['raceId'],savedir=save_dir)
+            self.saveLapTimes(i['raceId'],savedir=save_dir)
 
 
 
 if __name__ == '__main__':
     db = f1db()
     # db.getLapTimes(90, 'Laptimes')
-    db.getLaptimesALL(os.path.join(os.getcwd(),'Laptimes'))
+    print(db.getGridByRaceID(1021))
 
