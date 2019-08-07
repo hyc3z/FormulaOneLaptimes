@@ -134,7 +134,7 @@ class f1db:
         self.cur.execute('SELECT * from races where year='+str(year)+' and round='+str(round))
         return self.cur.fetchall()
 
-    def getLapTimes(self,raceID,filename='f1.csv'):
+    def getLapTimes(self,raceID,savedir):
         csv = 'Driver'
         self.cur.execute('SELECT max(lap) from lapTimes where raceId='+str(raceID))
         lapcount = self.cur.fetchall()[0]['max(lap)']
@@ -148,7 +148,10 @@ class f1db:
         for item in driver_ids:
             self.cur.execute('SELECT * from drivers where driverId='+str(item['driverId']))
             result = self.cur.fetchall()
-            driver_names_matchup[item['driverId']] = result[0]['code']
+            if result[0]['code'] is not None:
+                driver_names_matchup[item['driverId']] = result[0]['forename']+' '+result[0]['surname']+' ('+result[0]['code']+')'
+            else:
+                driver_names_matchup[item['driverId']] = result[0]['forename']+' '+result[0]['surname']
 
         for i in driver_names_matchup:
             self.cur.execute('SELECT time from lapTimes where raceId='+str(raceID)+' and driverId='+str(i)+' order by lap asc')
@@ -160,12 +163,27 @@ class f1db:
             line += '\n'
             csv += line
 
-        f = open(filename,'w+')
+        self.cur.execute('SELECT year,name from races where raceId='+str(raceID))
+        filename_raw = self.cur.fetchall()
+        filename = str(filename_raw[0]['year'])+' '+str(filename_raw[0]['name'])+'.csv'
+        try:
+            f = open(os.path.join(savedir,str(filename_raw[0]['year']),filename),'w+')
+        except FileNotFoundError:
+            os.system('mkdir '+os.path.join(savedir,str(filename_raw[0]['year'])))
+            f = open(os.path.join(savedir,str(filename_raw[0]['year']),filename),'w+')
         f.write(csv)
+        print(os.path.join(savedir,str(filename_raw[0]['year']),filename),'Done')
+
+    def getLaptimesALL(self,save_dir):
+        self.cur.execute('SELECT raceId from lapTimes where lap=1 and position=1 order by raceId asc')
+        raceIds = self.cur.fetchall()
+        for i in raceIds:
+            self.getLapTimes(i['raceId'],savedir=save_dir)
+
 
 
 if __name__ == '__main__':
     db = f1db()
-    # print(db.searchRaceID(2019, 12))
-    db.getLapTimes(1021)
+    # db.getLapTimes(90, 'Laptimes')
+    db.getLaptimesALL(os.path.join(os.getcwd(),'Laptimes'))
 
