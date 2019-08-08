@@ -142,7 +142,6 @@ class f1db:
         self.cur.execute('select name from races where year='+str(year)+' order by name asc')
         return self.cur.fetchall()
 
-
     def getRaceIDByYearName(self,year,name):
         self.cur.execute('SELECT * from races where year='+str(year)+' and name="'+name+'"')
         return self.cur.fetchall()
@@ -151,12 +150,44 @@ class f1db:
         self.cur.execute('SELECT * from races where year='+str(year)+' and round='+str(round))
         return self.cur.fetchall()
 
+    def getDriversByDriverID(self,DriverId):
+        self.cur.execute('select code,forename,surname,driverId from drivers where driverId='+str(DriverId))
+        return self.cur.fetchall()
+
     def getDriversByRaceID(self,RaceID):
-        self.cur.execute('select code,forename,surname from drivers where driverId in (SELECT driverId from lapTimes where lap=1 and raceId='+str(RaceID)+') order by forename asc')
+        self.cur.execute('select code,forename,surname,driverId from drivers where driverId in (SELECT driverId from lapTimes where lap=1 and raceId='+str(RaceID)+') order by forename asc')
         return self.cur.fetchall()
 
     def getGridByRaceID(self,raceID):
-        self.cur.execute('select code,forename,surname from drivers where driverId in (select driverId from qualifying where raceId=1021 and driverId in (SELECT driverId from lapTimes where lap=1 and raceId=1021) order by position asc)')
+        self.cur.execute('select driverId from results where raceId='+str(raceID)+' order by position is null,position asc')
+        return self.cur.fetchall()
+
+    def getStartposByRaceIDDriverID(self,raceID,driverID):
+        self.cur.execute('select position from qualifying where raceId='+str(raceID)+' and driverId='+str(driverID))
+        return  self.cur.fetchall()
+
+    # def getResultStandingByRaceID(self,raceID):
+    #     self.cur.execute('select code,forename,surname from drivers where driverId in (select driverId from results where raceId='+str(raceID)+' and driverId in (SELECT driverId from lapTimes where lap=1 and raceId='+str(raceID)+') order by position asc)')
+    #     return self.cur.fetchall()
+
+    def getFinishStatusNameByStatusID(self,statusId):
+        self.cur.execute('select status from status where statusId='+str(statusId))
+        return self.cur.fetchall()
+
+
+
+    def getResultStatusIDByRaceIDandDriverID(self,raceID, driverId):
+        # self.cur.execute('select status from status where statusId in (select statusId from results where raceId='+str(raceID)+' order by position asc)')
+        self.cur.execute('select statusId from results where raceId='+str(raceID)+' and driverId='+str(driverId)+' order by position asc')
+        return self.cur.fetchall()
+
+    def getResultStandingByRaceIDandDriverId(self,raceID, driverId):
+        # self.cur.execute('select status from status where statusId in (select statusId from results where raceId='+str(raceID)+' order by position asc)')
+        self.cur.execute('select position from results where raceId='+str(raceID)+' and driverId='+str(driverId))
+        return self.cur.fetchall()
+
+    def GetDriverIdViaName(self, forename, surname):
+        self.cur.execute('select driverId from drivers where forename="'+forename+'" and surname="'+surname+'"')
         return self.cur.fetchall()
 
     def saveLapTimes(self,raceID,savedir):
@@ -210,5 +241,6 @@ class f1db:
 if __name__ == '__main__':
     db = f1db()
     # db.getLapTimes(90, 'Laptimes')
-    print(db.getGridByRaceID(1021))
+    print(db.getResultStandingByRaceIDandDriverId(1021,1))
+
 
