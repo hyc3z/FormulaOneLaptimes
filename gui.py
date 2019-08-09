@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'MainWindow1.ui'
+# Form implementation generated from reading ui file 'Dialog1.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.0
 #
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
 
-class Ui_MainWindow(object):
+class Ui_Dialog(object):
 
     def __init__(self):
         self.db = f1db()
@@ -109,7 +109,7 @@ class Ui_MainWindow(object):
         self.raceId = raceId
         self.laststate.setall(False)
         self.lastplotedstate.setall(False)
-        self.tableWidget.horizontalHeader().setStretchLastSection(False)
+        self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
@@ -209,17 +209,17 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem(rowcount, 4, check)
             rowcount += 1
 
-    # def setupUi(self, MainWindow):
-    #     MainWindow.setObjectName("MainWindow")
-    #     MainWindow.resize(1102, 691)
+    # def setupUi(self, Dialog):
+    #     Dialog.setObjectName("Dialog")
+    #     Dialog.resize(1102, 691)
     #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
     #     sizePolicy.setHorizontalStretch(0)
     #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-    #     MainWindow.setSizePolicy(sizePolicy)
-    #     MainWindow.setMinimumSize(QtCore.QSize(800, 600))
-    #     MainWindow.setMaximumSize(QtCore.QSize(8000, 6000))
-    #     self.centralwidget = QtWidgets.QWidget(MainWindow)
+    #     sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+    #     Dialog.setSizePolicy(sizePolicy)
+    #     Dialog.setMinimumSize(QtCore.QSize(800, 600))
+    #     Dialog.setMaximumSize(QtCore.QSize(8000, 6000))
+    #     self.centralwidget = QtWidgets.QWidget(Dialog)
     #     self.centralwidget.setObjectName("centralwidget")
     #     self.widget = QtWidgets.QWidget(self.centralwidget)
     #     self.widget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
@@ -285,34 +285,34 @@ class Ui_MainWindow(object):
     #     self.canvas.setSizePolicy(sizePolicy)
     #     self.canvas.setObjectName("canvas")
     #     self.gridLayout.addWidget(self.canvas, 2, 1, 1, 1)
-    #     MainWindow.setCentralWidget(self.centralwidget)
-    #     self.statusbar = QtWidgets.QStatusBar(MainWindow)
+    #     Dialog.setCentralWidget(self.centralwidget)
+    #     self.statusbar = QtWidgets.QStatusBar(Dialog)
     #     self.statusbar.setObjectName("statusbar")
-    #     MainWindow.setStatusBar(self.statusbar)
-    #     self.retranslateUi(MainWindow)
-    #     QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    #     Dialog.setStatusBar(self.statusbar)
+    #     self.retranslateUi(Dialog)
+    #     QtCore.QMetaObject.connectSlotsByName(Dialog)
     #     self.initialize()
     #     self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
     #     self.pushButton.clicked.connect(self.getDriversInThisRace)
     #     self.tableWidget.clicked.connect(self.showPos)
 
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1366, 768)
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Dialog")
+        Dialog.resize(1366, 768)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-        MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMinimumSize(QtCore.QSize(1366, 768))
-        MainWindow.setMaximumSize(QtCore.QSize(1366, 768))
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
+        Dialog.setSizePolicy(sizePolicy)
+        Dialog.setMinimumSize(QtCore.QSize(1024, 768))
+        Dialog.setMaximumSize(QtCore.QSize(3840, 2160))
+        self.centralwidget = QtWidgets.QWidget(Dialog)
         self.centralwidget.setObjectName("centralwidget")
         self.layoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.layoutWidget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
         self.layoutWidget.setObjectName("layoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
-        self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        self.gridLayout = QtWidgets.QGridLayout(Dialog)
+
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -365,30 +365,30 @@ class Ui_MainWindow(object):
         self.canvas.setSizePolicy(sizePolicy)
         self.canvas.setObjectName("canvas")
         self.gridLayout.addWidget(self.canvas, 2, 1, 1, 1)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        # Dialog.setCentralWidget(self.centralwidget)
+        # self.statusbar = QtWidgets.QStatusBar(Dialog)
+        # self.statusbar.setObjectName("statusbar")
+        # Dialog.setStatusBar(self.statusbar)
 
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
         self.tableWidget.clicked.connect(self.showPos)
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.retranslateUi(Dialog)
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-    def retranslateUi(self, MainWindow):
+    def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "F1 Analyz v0.2.1"))
-        self.pushButton.setText(_translate("MainWindow", "Search"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.2.2"))
+        self.pushButton.setText(_translate("Dialog", "Search"))
 
 
 if __name__ == "__main__":
     import sys
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    Dialog = QtWidgets.QDialog()
+    ui = Ui_Dialog()
+    ui.setupUi(Dialog)
+    Dialog.show()
     sys.exit(app.exec_())
