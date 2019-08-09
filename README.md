@@ -29,6 +29,6 @@ Current version: 0.2.1
 
 The project is in a very early stage, and a lot of features and algorithms are needed. Please join in the project if you're also a F1 lover, and just want to dig a little deeper. We need your help!
 
-![Image text](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-10%2001-38-34.png)
+![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-10%2001-38-34.png)
 
  
