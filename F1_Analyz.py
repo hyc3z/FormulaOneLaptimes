@@ -1,6 +1,7 @@
 import pymysql
 import os
 import time
+import sqlite3
 # import
 import subprocess
 import sys
@@ -12,76 +13,30 @@ return 4: File not exist or unexpected end of file
 """
 
 
-def duplicate_renamer(filename):
-    duplicate_name = 0
-    if os.path.exists(filename):
-        duplicate_name += 1
-        while os.path.exists(filename + '.' + str(duplicate_name)):
-            duplicate_name += 1
-    if not duplicate_name:
-        return filename
-    else:
-        return filename + '.' + str(duplicate_name)
-
-
-def duplicate_latest(filename):
-    duplicate_name = 0
-    if os.path.exists(filename):
-        duplicate_name += 1
-        while os.path.exists(filename + '.' + str(duplicate_name)):
-            duplicate_name += 1
-    if not duplicate_name:
-        return None
-    else:
-        if duplicate_name == 1:
-            return filename
-        else:
-            return filename + '.' + str(duplicate_name-1)
-
-
-def download_db(filename,retry_count=3):
-    file_name = duplicate_renamer(filename)
-    ret = 1
-    error_count = 0
-    while ret and error_count < retry_count:
-        ret = os.system('wget http://ergast.com/downloads/' + file_name)
-        if ret:
-            error_count += 1
-            print('Network Error.Retrying...', error_count)
-    if error_count == retry_count:
-        return -1
-    if not os.path.exists(file_name):
-        return 2
-    return 0
-
-
-def updatedb(download=True,retry_count=3,filename='f1db.sql.gz'):
-    if download:
-        returncode = download_db(retry_count=retry_count,filename=filename)
-        if returncode != 0:
-            return returncode
-    file_name = duplicate_latest(filename)
-    sql_name = duplicate_renamer('f1db.sql')
-    ret = os.system('gunzip -c '+file_name+' > '+sql_name)
-    print(ret)
-    if ret != 0:
-        if ret == 256:
-            return 4
-        if ret == 512:
-            return 3
 
 class f1db:
 
-    def __init__(self, host='localhost', port=3306, db='f1', user='root', passwd='aqwe6kj3', charset='utf8'):
+    def dict_factory(self, cursor, row):
+        d = {}
+        for index, col in enumerate(cursor.description):
+            d[col[0]] = row[index]
+        return d
+
+    def __init__(self,dbtype='sqlite3', host='localhost', port=3306, db='f1', user='root', passwd='aqwe6kj3', charset='utf8'):
         # 建立连接
-        self.passwd = passwd
-        self.host = host
-        self.port = port
-        self.db = db
-        self.user = user
-        self.conn = pymysql.connect(host=host, port=port, db=db, user=user, passwd=passwd, charset=charset)
-        # 创建游标，操作设置为字典类型
-        self.cur = self.conn.cursor(cursor=pymysql.cursors.DictCursor)
+        if dbtype == 'mysql':
+            self.passwd = passwd
+            self.host = host
+            self.port = port
+            self.db = db
+            self.user = user
+            self.conn = pymysql.connect(host=host, port=port, db=db, user=user, passwd=passwd, charset=charset)
+            # 创建游标，操作设置为字典类型
+            self.cur = self.conn.cursor(cursor=pymysql.cursors.DictCursor)
+        elif dbtype == 'sqlite3':
+            self.conn = sqlite3.connect(os.path.join(os.getcwd(), 'f1.db'))
+            self.conn.row_factory = self.dict_factory
+            self.cur = self.conn.cursor()
         # self.init_all_data()
 
     def __enter__(self):
@@ -194,7 +149,7 @@ class f1db:
         self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId))
         return self.cur.fetchall()
 
-    def saveLapTimes(self,raceID,savedir):
+    def saveLapTimesCsv(self,raceID,savedir):
         csv = 'Driver'
         self.cur.execute('SELECT max(lap) from lapTimes where raceId='+str(raceID))
         lapcount = self.cur.fetchall()[0]['max(lap)']
@@ -234,7 +189,7 @@ class f1db:
         f.write(csv)
         print(os.path.join(savedir,str(filename_raw[0]['year']),filename),'Done')
 
-    def saveLaptimesALL(self,save_dir):
+    def saveLaptimesCsvALL(self,save_dir):
         self.cur.execute('SELECT raceId from lapTimes where lap=1 and position=1 order by raceId asc')
         raceIds = self.cur.fetchall()
         for i in raceIds:
