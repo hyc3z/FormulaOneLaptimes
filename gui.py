@@ -41,7 +41,9 @@ class Ui_MainWindow(object):
         race_name = self.comboBox_2.currentText()
         raceId = self.db.getRaceIDByYearName(year, race_name)
         drivers_id = self.db.getGridByRaceID(raceId[0]['raceId'])
+        t0 = time.time()
         self.initTable(drivers_id, raceId[0]['raceId'])
+        print('Draw table:',time.time()-t0,'seconds.')
 
     def showPos(self):
         length = self.tableWidget.rowCount()
