@@ -73,22 +73,27 @@ class Ui_MainWindow(object):
         return millisecond+1000*second+60000*minute
 
     def plotGraph(self):
-        timing_pool = []
         # TODO: Can still be optimized
         try:
+            self.fig.clear()
             ax = self.fig.add_subplot(111)
             ax.cla()
-            for i in range(len(self.drivers)):
+            legends = []
+            length = len(self.drivers)
+            for i in range(length):
                 if self.laststate[i]:
-                    timing_pool.append(self.db.getLaptimesViaDriverIDRaceID(self.drivers[i]['driverId'], self.raceId))
-            for driver in timing_pool:
-                plot_pool_x = []
-                plot_pool_y = []
-                for timing in driver:
-                    time = self.mssmmm2ms(timing['time'])
-                    plot_pool_x.append(timing['lap'])
-                    plot_pool_y.append(time)
-                ax.plot(plot_pool_x, plot_pool_y)
+                    driver = self.drivers[i]
+                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    plot_pool_x = []
+                    plot_pool_y = []
+                    for k in timing:
+                        time = self.mssmmm2ms(k['time'])
+                        plot_pool_x.append(k['lap'])
+                        plot_pool_y.append(time)
+                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    legends.append(name)
+            self.fig.legend(legends,loc=5)
             self.canvas.draw()  #
         except Exception as e:
             print(e)
@@ -97,9 +102,11 @@ class Ui_MainWindow(object):
     def initTable(self, drivers, raceId):
         self.tableWidget.setColumnCount(5)
         self.laststate = bitarray.bitarray(len(drivers))
+        self.lastplotedstate = bitarray.bitarray(len(drivers))
         self.drivers = drivers
         self.raceId = raceId
         self.laststate.setall(False)
+        self.lastplotedstate.setall(False)
         self.tableWidget.horizontalHeader().setStretchLastSection(False)
         self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -114,14 +121,13 @@ class Ui_MainWindow(object):
             i = drivers[num]
             font = QtGui.QFont()
             color = QtGui.QColor(255, 255, 255)
+            finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
+            finish_pos = finish_pos_raw[0]['position']
+            start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId,i['driverId'])
             try:
-                finish_pos = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])[0]['position']
+                start_pos = start_pos_raw[0]['position']
             except IndexError:
-                finish_pos = 'DNF'
-            try:
-                start_pos = self.db.getStartposByRaceIDDriverID(raceId,i['driverId'])[0]['position']
-            except IndexError:
-                start_pos = 'DNS'
+                start_pos = ''
             finish_status_Id = self.db.getResultStatusIDByRaceIDandDriverID(raceId, i['driverId'])[0]['statusId']
             finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
             driver_detail = self.db.getDriversByDriverID(i['driverId'])
@@ -371,7 +377,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "F1 Analyz v0.1.1"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "F1 Analyz v0.2.1"))
         self.pushButton.setText(_translate("MainWindow", "Search"))
 
 
