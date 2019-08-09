@@ -10,7 +10,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from F1_Analyz import f1db
 import bitarray
+import matplotlib.pyplot as plt
 import time
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
 
 class Ui_MainWindow(object):
 
@@ -46,17 +48,57 @@ class Ui_MainWindow(object):
         curstate = bitarray.bitarray(length)
         curstate.setall(False)
         for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.item(i, 2).checkState():
+            if self.tableWidget.item(i, 4).checkState():
                 curstate[i] = 1
         if bitarray.bitdiff(curstate, self.laststate):
             self.laststate = curstate
-            # print(curstate)
-            # insert funcion here
+            # print(self.laststate)
+            t = time.time()
+            self.plotGraph()
+            print('Plot graph:',time.time()-t,'seconds.')
+
+    def mssmmm2ms(self,time):
+        minute = 0
+        if ':' in time:
+            sep = time.split(':')
+            minute = int(sep[0])
+            time = sep[1]
+        if '.' in time:
+            sep = time.split('.')
+            second = int(sep[0])
+            millisecond = int(sep[1])
+        else:
+            second = int(time)
+            millisecond = 0
+        return millisecond+1000*second+60000*minute
+
+    def plotGraph(self):
+        timing_pool = []
+        # TODO: Can still be optimized
+        try:
+            ax = self.fig.add_subplot(111)
+            ax.cla()
+            for i in range(len(self.drivers)):
+                if self.laststate[i]:
+                    timing_pool.append(self.db.getLaptimesViaDriverIDRaceID(self.drivers[i]['driverId'], self.raceId))
+            for driver in timing_pool:
+                plot_pool_x = []
+                plot_pool_y = []
+                for timing in driver:
+                    time = self.mssmmm2ms(timing['time'])
+                    plot_pool_x.append(timing['lap'])
+                    plot_pool_y.append(time)
+                ax.plot(plot_pool_x, plot_pool_y)
+            self.canvas.draw()  #
+        except Exception as e:
+            print(e)
+
 
     def initTable(self, drivers, raceId):
-
         self.tableWidget.setColumnCount(5)
         self.laststate = bitarray.bitarray(len(drivers))
+        self.drivers = drivers
+        self.raceId = raceId
         self.laststate.setall(False)
         self.tableWidget.horizontalHeader().setStretchLastSection(False)
         self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -65,7 +107,7 @@ class Ui_MainWindow(object):
         self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'Result', 'Enabled'])
+        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'Result', 'Checked'])
         self.tableWidget.setRowCount(len(drivers))
         rowcount = 0
         for num in range(len(drivers)):
@@ -159,28 +201,115 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem(rowcount, 4, check)
             rowcount += 1
 
+    # def setupUi(self, MainWindow):
+    #     MainWindow.setObjectName("MainWindow")
+    #     MainWindow.resize(1102, 691)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
+    #     MainWindow.setSizePolicy(sizePolicy)
+    #     MainWindow.setMinimumSize(QtCore.QSize(800, 600))
+    #     MainWindow.setMaximumSize(QtCore.QSize(8000, 6000))
+    #     self.centralwidget = QtWidgets.QWidget(MainWindow)
+    #     self.centralwidget.setObjectName("centralwidget")
+    #     self.widget = QtWidgets.QWidget(self.centralwidget)
+    #     self.widget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
+    #     self.widget.setObjectName("widget")
+    #     self.gridLayout = QtWidgets.QGridLayout(self.widget)
+    #     self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+    #     self.gridLayout.setContentsMargins(0, 0, 0, 0)
+    #     self.gridLayout.setObjectName("gridLayout")
+    #     self.horizontalLayout = QtWidgets.QHBoxLayout()
+    #     self.horizontalLayout.setObjectName("horizontalLayout")
+    #     self.comboBox = QtWidgets.QComboBox(self.widget)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(self.comboBox.sizePolicy().hasHeightForWidth())
+    #     self.comboBox.setSizePolicy(sizePolicy)
+    #     self.comboBox.setMaximumSize(QtCore.QSize(16777215, 30))
+    #     self.comboBox.setCurrentText("")
+    #     self.comboBox.setObjectName("comboBox")
+    #     self.horizontalLayout.addWidget(self.comboBox)
+    #     self.comboBox_2 = QtWidgets.QComboBox(self.widget)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(self.comboBox_2.sizePolicy().hasHeightForWidth())
+    #     self.comboBox_2.setSizePolicy(sizePolicy)
+    #     self.comboBox_2.setMaximumSize(QtCore.QSize(16777215, 30))
+    #     self.comboBox_2.setObjectName("comboBox_2")
+    #     self.horizontalLayout.addWidget(self.comboBox_2)
+    #     self.pushButton = QtWidgets.QPushButton(self.widget)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
+    #     self.pushButton.setSizePolicy(sizePolicy)
+    #     self.pushButton.setMaximumSize(QtCore.QSize(16777215, 30))
+    #     self.pushButton.setObjectName("pushButton")
+    #     self.horizontalLayout.addWidget(self.pushButton)
+    #     self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
+    #     self.graphicsView = QtWidgets.QGraphicsView(self.widget)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
+    #     self.graphicsView.setSizePolicy(sizePolicy)
+    #     self.graphicsView.setObjectName("graphicsView")
+    #     self.gridLayout.addWidget(self.graphicsView, 0, 1, 2, 1)
+    #     self.tableWidget = QtWidgets.QTableWidget(self.widget)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
+    #     self.tableWidget.setSizePolicy(sizePolicy)
+    #     self.tableWidget.setObjectName("tableWidget")
+    #     self.tableWidget.setColumnCount(0)
+    #     self.tableWidget.setRowCount(0)
+    #     self.gridLayout.addWidget(self.tableWidget, 1, 0, 2, 1)
+    #     self.canvas = QtWidgets.QGraphicsView(self.widget)
+    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+    #     sizePolicy.setHorizontalStretch(0)
+    #     sizePolicy.setVerticalStretch(0)
+    #     sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
+    #     self.canvas.setSizePolicy(sizePolicy)
+    #     self.canvas.setObjectName("canvas")
+    #     self.gridLayout.addWidget(self.canvas, 2, 1, 1, 1)
+    #     MainWindow.setCentralWidget(self.centralwidget)
+    #     self.statusbar = QtWidgets.QStatusBar(MainWindow)
+    #     self.statusbar.setObjectName("statusbar")
+    #     MainWindow.setStatusBar(self.statusbar)
+    #     self.retranslateUi(MainWindow)
+    #     QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    #     self.initialize()
+    #     self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
+    #     self.pushButton.clicked.connect(self.getDriversInThisRace)
+    #     self.tableWidget.clicked.connect(self.showPos)
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1102, 691)
+        MainWindow.resize(1366, 768)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMinimumSize(QtCore.QSize(800, 600))
-        MainWindow.setMaximumSize(QtCore.QSize(8000, 6000))
+        MainWindow.setMinimumSize(QtCore.QSize(1366, 768))
+        MainWindow.setMaximumSize(QtCore.QSize(1366, 768))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.widget = QtWidgets.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
-        self.widget.setObjectName("widget")
-        self.gridLayout = QtWidgets.QGridLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(self.centralwidget)
+        self.layoutWidget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.comboBox = QtWidgets.QComboBox(self.widget)
+        self.comboBox = QtWidgets.QComboBox(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -190,7 +319,7 @@ class Ui_MainWindow(object):
         self.comboBox.setCurrentText("")
         self.comboBox.setObjectName("comboBox")
         self.horizontalLayout.addWidget(self.comboBox)
-        self.comboBox_2 = QtWidgets.QComboBox(self.widget)
+        self.comboBox_2 = QtWidgets.QComboBox(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -199,7 +328,7 @@ class Ui_MainWindow(object):
         self.comboBox_2.setMaximumSize(QtCore.QSize(16777215, 30))
         self.comboBox_2.setObjectName("comboBox_2")
         self.horizontalLayout.addWidget(self.comboBox_2)
-        self.pushButton = QtWidgets.QPushButton(self.widget)
+        self.pushButton = QtWidgets.QPushButton(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -209,15 +338,7 @@ class Ui_MainWindow(object):
         self.pushButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.pushButton)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
-        self.graphicsView = QtWidgets.QGraphicsView(self.widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
-        self.graphicsView.setSizePolicy(sizePolicy)
-        self.graphicsView.setObjectName("graphicsView")
-        self.gridLayout.addWidget(self.graphicsView, 0, 1, 2, 1)
-        self.tableWidget = QtWidgets.QTableWidget(self.widget)
+        self.tableWidget = QtWidgets.QTableWidget(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -227,23 +348,26 @@ class Ui_MainWindow(object):
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
         self.gridLayout.addWidget(self.tableWidget, 1, 0, 2, 1)
-        self.graphicsView_2 = QtWidgets.QGraphicsView(self.widget)
+        self.fig = plt.Figure()
+        self.canvas = FC(self.fig)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.graphicsView_2.sizePolicy().hasHeightForWidth())
-        self.graphicsView_2.setSizePolicy(sizePolicy)
-        self.graphicsView_2.setObjectName("graphicsView_2")
-        self.gridLayout.addWidget(self.graphicsView_2, 2, 1, 1, 1)
+        sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
+        self.canvas.setSizePolicy(sizePolicy)
+        self.canvas.setObjectName("canvas")
+        self.gridLayout.addWidget(self.canvas, 2, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
+        self.tableWidget.clicked.connect(self.showPos)
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -253,7 +377,7 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
-
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

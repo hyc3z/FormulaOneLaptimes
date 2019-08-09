@@ -186,8 +186,12 @@ class f1db:
         self.cur.execute('select position from results where raceId='+str(raceID)+' and driverId='+str(driverId))
         return self.cur.fetchall()
 
-    def GetDriverIdViaName(self, forename, surname):
+    def getDriverIdViaName(self, forename, surname):
         self.cur.execute('select driverId from drivers where forename="'+forename+'" and surname="'+surname+'"')
+        return self.cur.fetchall()
+
+    def getLaptimesViaDriverIDRaceID(self, driverId, raceId):
+        self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId))
         return self.cur.fetchall()
 
     def saveLapTimes(self,raceID,savedir):
