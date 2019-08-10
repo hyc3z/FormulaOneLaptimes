@@ -85,6 +85,14 @@ class f1db:
             print('Error')
         print('Done.',(time.time()-start_time)*1000,'ms')
 
+    def getPitstopsByRaceId(self,raceId):
+        self.cur.execute('select * from pitStops where raceId='+str(raceId))
+        return self.cur.fetchall()
+
+    def getPitstopByRaceIdDriverId(self, raceId, driverId):
+        self.cur.execute('select stop,lap from pitStops where raceId='+str(raceId)+' and driverId='+str(driverId))
+        return self.cur.fetchall()
+
     def getAllYearsRecordedInLaptimes(self):
         self.cur.execute('select year from races where raceId in (SELECT raceId from lapTimes where lap=1 and position=1 order by raceId asc) group by year order by year asc')
         return self.cur.fetchall()

@@ -72,7 +72,7 @@ class Ui_Dialog(object):
         curstate = bitarray.bitarray(length)
         curstate.setall(False)
         for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.item(i, 4).checkState():
+            if self.tableWidget.item(i, 5).checkState():
                 curstate[i] = 1
         if bitarray.bitdiff(curstate, self.laststate):
             self.laststate = curstate
@@ -135,7 +135,7 @@ class Ui_Dialog(object):
         self.plotGraph()
 
     def initTable(self, drivers, raceId):
-        self.tableWidget.setColumnCount(5)
+        self.tableWidget.setColumnCount(6)
         self.laststate = bitarray.bitarray(len(drivers))
         self.lastplotedstate = bitarray.bitarray(len(drivers))
         self.drivers = drivers
@@ -149,11 +149,15 @@ class Ui_Dialog(object):
         self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'Result', 'Checked'])
+        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'Result', 'Pitstops', 'Checked'])
         self.tableWidget.setRowCount(len(drivers))
         rowcount = 0
+        # self.pitstops = self.db.getPitstopsByRaceId(raceId)
+
         for num in range(len(drivers)):
             i = drivers[num]
+            pitstops = self.db.getPitstopByRaceIdDriverId(raceId,i['driverId'])
+            pitstop_counts = len(pitstops)
             font = QtGui.QFont()
             color = QtGui.QColor(255, 255, 255)
             finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
@@ -166,6 +170,9 @@ class Ui_Dialog(object):
             finish_status_Id = self.db.getResultStatusIDByRaceIDandDriverID(raceId, i['driverId'])[0]['statusId']
             finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
             driver_detail = self.db.getDriversByDriverID(i['driverId'])
+            check = QtWidgets.QTableWidgetItem()
+            check.setCheckState(QtCore.Qt.Unchecked)
+
             if finish_pos is not None:
                 if finish_pos == 1:
                     color = QtGui.QColor(255, 215, 0, 128)
@@ -209,24 +216,40 @@ class Ui_Dialog(object):
             else:
                 if finish_status_Id == 2:
                     finishpos = QtWidgets.QTableWidgetItem("DSQ")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
                         or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
                         or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95\
                         or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132\
                         or 135 <= finish_status_Id <= 137:
                     finishpos = QtWidgets.QTableWidgetItem("RET")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 62:
                     finishpos = QtWidgets.QTableWidgetItem("NC")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 77:
                     finishpos = QtWidgets.QTableWidgetItem("107")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 81:
                     finishpos = QtWidgets.QTableWidgetItem("DNQ")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 90:
                     finishpos = QtWidgets.QTableWidgetItem("NR")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 96:
                     finishpos = QtWidgets.QTableWidgetItem("EX")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 97:
                     finishpos = QtWidgets.QTableWidgetItem("DNPQ")
+                    check.setFlags(
+                        QtCore.Qt.ItemIsSelectable)
             finishpos.setFont(font)
             finishpos.setBackground(color)
             if finish_pos is None:
@@ -234,12 +257,17 @@ class Ui_Dialog(object):
             finishpos.setFlags(
                 QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             self.tableWidget.setItem(rowcount, 3, finishpos)
-            check = QtWidgets.QTableWidgetItem()
-            check.setCheckState(QtCore.Qt.Unchecked)
-            if start_pos == 'DNS':
-                check.setFlags(
-                    QtCore.Qt.ItemIsSelectable)
-            self.tableWidget.setItem(rowcount, 4, check)
+            pitstops = QtWidgets.QTableWidgetItem(str(pitstop_counts))
+            # pitstops.setCheckState(QtCore.Qt.Unchecked)
+            pitstops.setFont(font)
+            pitstops.setBackground(color)
+            pitstops.setFlags(
+                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            if finish_pos is None:
+                pitstops.setForeground(QtGui.QColor(255, 255, 255))
+            self.tableWidget.setItem(rowcount, 4, pitstops)
+
+            self.tableWidget.setItem(rowcount, 5, check)
             rowcount += 1
 
     # def setupUi(self, Dialog):
@@ -428,10 +456,11 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         self.SpinBox.setEnabled(False)
         self.SpinBox_2.setEnabled(False)
+        self.pushButton.click()
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.3.1"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.3.2"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
