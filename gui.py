@@ -22,12 +22,19 @@ class Ui_Dialog(object):
         self.race_names_recorded_in_lap_times = self.db.getAllRaceNameRecordedInLaptimes()
 
     def initialize(self):
+        max_year = 0
         for i in self.years_recorded_in_lap_times:
+            if i['year']>max_year:
+                max_year = i['year']
             self.comboBox.addItem(str(i['year']))
-        year = self.comboBox.currentText()
+        self.comboBox.setCurrentText(str(max_year))
+        year = max_year
         races = self.db.getRacesInAYearRecordedInLaptimes(year)
         for i in races:
             self.comboBox_2.addItem(i['name'])
+        latest_race = self.db.getLatestRaceThisYear(year)
+        self.comboBox_2.setCurrentText(self.db.getRaceNameByRaceId(latest_race[0]['max(raceId)'])[0]['name'])
+
 
     def getRacesInThisYear(self):
         self.comboBox_2.clear()
@@ -44,6 +51,21 @@ class Ui_Dialog(object):
         t0 = time.time()
         self.initTable(drivers_id, raceId[0]['raceId'])
         print('Draw table:',time.time()-t0,'seconds.')
+        self.max_lap = self.db.getMaximumLap(raceId[0]['raceId'])[0]['max(lap)']
+        self.max_cal_lap = self.max_lap
+        print(self.max_lap)
+        self.min_lap = 1
+        self.min_cal_lap = self.min_lap
+        self.SpinBox.setMinimum(1)
+        # print(self.db.getMaximumLap(raceId[0]['raceId']))
+        self.SpinBox.setMaximum(self.max_lap)
+        self.SpinBox.setSingleStep(1)
+        self.SpinBox_2.setMinimum(1)
+        self.SpinBox_2.setMaximum(self.max_lap)
+        self.SpinBox_2.setSingleStep(1)
+        self.SpinBox_2.setValue(self.max_lap)
+        self.SpinBox_2.setEnabled(True)
+        self.SpinBox.setEnabled(True)
 
     def showPos(self):
         length = self.tableWidget.rowCount()
@@ -89,9 +111,10 @@ class Ui_Dialog(object):
                     plot_pool_x = []
                     plot_pool_y = []
                     for k in timing:
-                        time = self.mssmmm2ms(k['time'])
-                        plot_pool_x.append(k['lap'])
-                        plot_pool_y.append(time)
+                        if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
+                            time = self.mssmmm2ms(k['time'])
+                            plot_pool_x.append(k['lap'])
+                            plot_pool_y.append(time)
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(name)
@@ -100,6 +123,16 @@ class Ui_Dialog(object):
         except Exception as e:
             print(e)
 
+
+    def changeStartLap(self):
+        cur_lap = self.SpinBox.value()
+        self.SpinBox_2.setMinimum(cur_lap)
+        self.min_cal_lap = cur_lap
+        self.plotGraph()
+
+    def changeEndLap(self):
+        self.max_cal_lap = self.SpinBox_2.value()
+        self.plotGraph()
 
     def initTable(self, drivers, raceId):
         self.tableWidget.setColumnCount(5)
@@ -356,6 +389,21 @@ class Ui_Dialog(object):
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
         self.gridLayout.addWidget(self.tableWidget, 1, 0, 2, 1)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.label = QtWidgets.QLabel(self.layoutWidget)
+        self.label.setObjectName("label")
+        self.horizontalLayout_2.addWidget(self.label)
+        self.SpinBox = QtWidgets.QSpinBox(self.layoutWidget)
+        self.SpinBox.setObjectName("SpinBox")
+        self.horizontalLayout_2.addWidget(self.SpinBox)
+        self.label_2 = QtWidgets.QLabel(self.layoutWidget)
+        self.label_2.setObjectName("label_2")
+        self.horizontalLayout_2.addWidget(self.label_2)
+        self.SpinBox_2 = QtWidgets.QSpinBox(self.layoutWidget)
+        self.SpinBox_2.setObjectName("SpinBox_2")
+        self.horizontalLayout_2.addWidget(self.SpinBox_2)
+        self.gridLayout.addLayout(self.horizontalLayout_2, 0, 1, 1, 1)
         self.fig = plt.Figure()
         self.canvas = FC(self.fig)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -374,13 +422,20 @@ class Ui_Dialog(object):
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
         self.tableWidget.clicked.connect(self.showPos)
+        self.SpinBox.valueChanged.connect(self.changeStartLap)
+        self.SpinBox_2.valueChanged.connect(self.changeEndLap)
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        self.SpinBox.setEnabled(False)
+        self.SpinBox_2.setEnabled(False)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.2.2"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.3.1"))
         self.pushButton.setText(_translate("Dialog", "Search"))
+        self.label.setText(_translate("Dialog", "Lap Start"))
+        self.label_2.setText(_translate("Dialog", "Lap End"))
+
 
 
 if __name__ == "__main__":
