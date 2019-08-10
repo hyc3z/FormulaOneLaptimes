@@ -105,6 +105,11 @@ class f1db:
         self.cur.execute('select name from races where year='+str(year)+' order by name asc')
         return self.cur.fetchall()
 
+    # This is truly beautiful, isn't it
+    def getLaptimesAccumViaRaceIdDriverId(self,raceId,driverId):
+        self.cur.execute('select driverId,raceId,lap, (select sum(milliseconds) from lapTimes where lap<=tt.lap and raceId = tt.raceId and driverId = tt.driverId) as timeElapsed from lapTimes as tt where driverId='+str(driverId)+' and raceId='+str(raceId))
+        return self.cur.fetchall()
+
     def getLatestRaceThisYear(self,year):
         self.cur.execute('select max(raceId) from races where year='+str(year)+' and raceId in (select raceId from lapTimes)')
         return self.cur.fetchall()

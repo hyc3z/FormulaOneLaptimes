@@ -44,6 +44,9 @@ class Ui_Dialog(object):
             self.comboBox_2.addItem(i['name'])
 
     def getDriversInThisRace(self):
+        # self.canvas_2.clear()
+        # self.spacegapfig.clear()
+        # self.speedgapfig.clear()
         year = self.comboBox.currentText()
         race_name = self.comboBox_2.currentText()
         raceId = self.db.getRaceIDByYearName(year, race_name)
@@ -83,6 +86,10 @@ class Ui_Dialog(object):
             t2 = time.time()
             self.plotGapGraph()
             print('Plot gap graph:',time.time()-t2,'seconds.')
+            t3 = time.time()
+            self.plotSpaceGapGraph()
+            print('Plot space graph:',time.time()-t3,'seconds.')
+
 
     def mssmmm2ms(self,time):
         minute = 0
@@ -125,12 +132,52 @@ class Ui_Dialog(object):
             self.canvas.draw()  #
         except Exception as e:
             print(e)
-    
+
+    def plotSpaceGapGraph(self):
+        # TODO: Can still be optimized
+        # try:
+        self.spacegapfig.clear()
+        ax = self.spacegapfig.add_subplot(111)
+        ax.cla()
+        legends = []
+        length = len(self.drivers)
+        timing_pools = []
+        driver_pools = []
+        for i in range(length):
+            if self.laststate[i]:
+                driver = self.drivers[i]
+                timing_accum = self.db.getLaptimesAccumViaRaceIdDriverId(self.raceId, driver['driverId'])
+                # print(timing_accum)
+                timing_pools.append(timing_accum)
+                driver_pools.append(driver)
+        for i in range(len(timing_pools)):
+            for j in range(i + 1, len(timing_pools)):
+                plot_pool_x = []
+                plot_pool_y = []
+                for k in range(len(timing_pools[i])):
+                    if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                        try:
+                            time0 = timing_pools[i][k]['timeElapsed']
+                            time1 = timing_pools[j][k]['timeElapsed']
+                            delta_time = time0 - time1
+                            plot_pool_x.append(timing_pools[i][k]['lap'])
+                            plot_pool_y.append(delta_time)
+                        except IndexError:
+                            pass
+                name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
+                name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
+                ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                legends.append(name0 + ' and ' + name1)
+        self.spacegapfig.legend(legends, loc=1)
+        self.canvas_3.draw()  #
+        # except Exception as e:
+        #     print(e)
+
     def plotGapGraph(self):
         # TODO: Can still be optimized
         # try:
-        self.gapfig.clear()
-        ax = self.gapfig.add_subplot(111)
+        self.speedgapfig.clear()
+        ax = self.speedgapfig.add_subplot(111)
         ax.cla()
         legends = []
         length = len(self.drivers)
@@ -160,7 +207,7 @@ class Ui_Dialog(object):
                 name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                 ax.plot(plot_pool_x, plot_pool_y, marker=',')
                 legends.append(name0+' and '+name1)
-        self.gapfig.legend(legends, loc=1)
+        self.speedgapfig.legend(legends, loc=1)
         self.canvas_2.draw()  #
         # except Exception as e:
         #     print(e)
@@ -171,11 +218,13 @@ class Ui_Dialog(object):
         self.min_cal_lap = cur_lap
         self.plotTimeGraph()
         self.plotGapGraph()
+        self.plotSpaceGapGraph()
 
     def changeEndLap(self):
         self.max_cal_lap = self.SpinBox_2.value()
         self.plotTimeGraph()
         self.plotGapGraph()
+        self.plotSpaceGapGraph()
 
     def initTable(self, drivers, raceId):
         self.tableWidget.setColumnCount(6)
@@ -477,12 +526,10 @@ class Ui_Dialog(object):
         self.gridLayout.addLayout(self.horizontalLayout_2, 0, 1, 1, 1)
         self.tabWidget = QtWidgets.QTabWidget(self.layoutWidget)
         self.tabWidget.setObjectName("tabWidget")
+
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.tabWidget.addTab(self.tab, "")
-        self.tab_2 = QtWidgets.QWidget()
-        self.tab_2.setObjectName("tab_2")
-        self.tabWidget.addTab(self.tab_2, "")
         self.gridLayoutWidget = QtWidgets.QWidget(self.tab)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 10, 511, 541))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
@@ -490,13 +537,7 @@ class Ui_Dialog(object):
         self.gridLayout_2.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.gridLayoutWidget_2 = QtWidgets.QWidget(self.tab_2)
-        self.gridLayoutWidget_2.setGeometry(QtCore.QRect(10, 10, 511, 541))
-        self.gridLayoutWidget_2.setObjectName("gridLayoutWidget_2")
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.gridLayoutWidget_2)
-        self.gridLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_3.setObjectName("gridLayout_3")
+
         self.laptimefig = plt.Figure()
         self.canvas = FC(self.laptimefig)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -505,23 +546,56 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
         self.canvas.setSizePolicy(sizePolicy)
         self.canvas.setObjectName("canvas")
+        self.gridLayout_2.addWidget(self.canvas, 2, 1, 1, 1)
 
-        self.gapfig = plt.Figure()
-        self.canvas_2 = FC(self.gapfig)
+        self.tab_2 = QtWidgets.QWidget()
+        self.tab_2.setObjectName("tab_2")
+        self.tabWidget.addTab(self.tab_2, "")
+        self.gridLayoutWidget_2 = QtWidgets.QWidget(self.tab_2)
+        self.gridLayoutWidget_2.setGeometry(QtCore.QRect(10, 10, 511, 541))
+        self.gridLayoutWidget_2.setObjectName("gridLayoutWidget_2")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.gridLayoutWidget_2)
+        self.gridLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+
+        self.speedgapfig = plt.Figure()
+        self.canvas_2 = FC(self.speedgapfig)
         self.canvas_2.setObjectName("canvas_2")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.canvas_2.sizePolicy().hasHeightForWidth())
         self.canvas_2.setSizePolicy(sizePolicy)
-        self.gridLayout.addWidget(self.tabWidget, 1, 1, 1, 1)
-        self.gridLayout_2.addWidget(self.canvas, 2, 1, 1, 1)
         self.gridLayout_3.addWidget(self.canvas_2, 2, 1, 1, 1)
+
+        self.tab_3 = QtWidgets.QWidget()
+        self.tab_3.setObjectName("tab_3")
+        self.tabWidget.addTab(self.tab_3, "")
+        self.gridLayoutWidget_3 = QtWidgets.QWidget(self.tab_3)
+        self.gridLayoutWidget_3.setGeometry(QtCore.QRect(10, 10, 511, 541))
+        self.gridLayoutWidget_3.setObjectName("gridLayoutWidget_3")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.gridLayoutWidget_3)
+        self.gridLayout_4.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+
+        self.spacegapfig = plt.Figure()
+        self.canvas_3 = FC(self.spacegapfig)
+        self.canvas_3.setObjectName("canvas_3")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.canvas_3.sizePolicy().hasHeightForWidth())
+        self.canvas_3.setSizePolicy(sizePolicy)
+        self.gridLayout_4.addWidget(self.canvas_3, 2, 1, 1, 1)
+
+        self.gridLayout.addWidget(self.tabWidget, 1, 1, 1, 1)
         # Dialog.setCentralWidget(self.centralwidget)
         # self.statusbar = QtWidgets.QStatusBar(Dialog)
         # self.statusbar.setObjectName("statusbar")
         # Dialog.setStatusBar(self.statusbar)
-
+        
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
@@ -536,13 +610,13 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.4.0"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.0"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Lap Time"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Speed Gap"))
-
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Car Gap"))
 
 if __name__ == "__main__":
     import sys
