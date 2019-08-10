@@ -25,7 +25,7 @@ After installing the requirements, and having a f1.db file under project directo
    
 to start the software.
 
-Current version: 0.2.1 
+Current version: 0.3.1 
 
 The project is in a very early stage, and a lot of features and algorithms are needed. Please join in the project if you're also a F1 lover, and just want to dig a little deeper. We need your help!
 
