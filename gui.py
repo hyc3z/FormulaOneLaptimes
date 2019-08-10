@@ -53,7 +53,7 @@ class Ui_Dialog(object):
         print('Draw table:',time.time()-t0,'seconds.')
         self.max_lap = self.db.getMaximumLap(raceId[0]['raceId'])[0]['max(lap)']
         self.max_cal_lap = self.max_lap
-        print(self.max_lap)
+        # print(self.max_lap)
         self.min_lap = 1
         self.min_cal_lap = self.min_lap
         self.SpinBox.setMinimum(1)
