@@ -72,16 +72,20 @@ class Ui_Dialog(object):
         # print(self.max_lap)
         self.min_lap = 1
         self.min_cal_lap = self.min_lap
-        self.SpinBox.setMinimum(1)
-        # print(self.db.getMaximumLap(raceId[0]['raceId']))
-        self.SpinBox.setMaximum(self.max_lap)
-        self.SpinBox.setSingleStep(1)
-        self.SpinBox_2.setMinimum(1)
-        self.SpinBox_2.setMaximum(self.max_lap)
-        self.SpinBox_2.setSingleStep(1)
-        self.SpinBox_2.setValue(self.max_lap)
-        self.SpinBox_2.setEnabled(True)
-        self.SpinBox.setEnabled(True)
+        if self.max_lap is not None:
+            self.SpinBox.setMinimum(1)
+            # print(self.db.getMaximumLap(raceId[0]['raceId']))
+            self.SpinBox.setMaximum(self.max_lap)
+            self.SpinBox.setSingleStep(1)
+            self.SpinBox_2.setMinimum(1)
+            self.SpinBox_2.setMaximum(self.max_lap)
+            self.SpinBox_2.setSingleStep(1)
+            self.SpinBox_2.setValue(self.max_lap)
+            self.SpinBox_2.setEnabled(True)
+            self.SpinBox.setEnabled(True)
+        else:
+            self.SpinBox_2.setEnabled(False)
+            self.SpinBox.setEnabled(False)
 
     def showPos(self):
         length = self.tableWidget.rowCount()
@@ -559,7 +563,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.4"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.5"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
@@ -568,12 +572,22 @@ class Ui_Dialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Speed Gap"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "Car Gap"))
 
+class CommonHelper:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def readQss(style):
+        with open(style, 'r') as f:
+            return f.read()
 
 if __name__ == "__main__":
     import sys
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
+    # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
+    # Dialog.setStyleSheet(qssStyle)
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
     Dialog.show()
