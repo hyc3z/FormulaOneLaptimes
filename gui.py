@@ -22,6 +22,7 @@ class Ui_Dialog(object):
         self.race_names_recorded_in_lap_times = self.db.getAllRaceNameRecordedInLaptimes()
 
     def initialize(self):
+        self.hide_pit_eelap = False
         max_year = 0
         for i in self.years_recorded_in_lap_times:
             if i['year']>max_year:
@@ -34,6 +35,19 @@ class Ui_Dialog(object):
             self.comboBox_2.addItem(i['name'])
         latest_race = self.db.getLatestRaceThisYear(year)
         self.comboBox_2.setCurrentText(self.db.getRaceNameByRaceId(latest_race[0]['max(raceId)'])[0]['name'])
+
+
+    def plotAll(self):
+        self.plotTimeGraph()
+        self.plotSpaceGapGraph()
+        self.plotGapGraph()
+
+
+    def hidePitChecked(self):
+        boolean = self.checkBox.checkState()
+        self.hide_pit_eelap = bool(boolean)
+        # print(self.hide_pit_eelap)
+        self.plotAll()
 
 
     def getRacesInThisYear(self):
@@ -51,9 +65,8 @@ class Ui_Dialog(object):
         race_name = self.comboBox_2.currentText()
         raceId = self.db.getRaceIDByYearName(year, race_name)
         drivers_id = self.db.getGridByRaceID(raceId[0]['raceId'])
-        t0 = time.time()
+        # self.pitdata = self.db.getPitstopsByRaceId(raceId[0]['raceId'])
         self.initTable(drivers_id, raceId[0]['raceId'])
-        print('Draw table:',time.time()-t0,'seconds.')
         self.max_lap = self.db.getMaximumLap(raceId[0]['raceId'])[0]['max(lap)']
         self.max_cal_lap = self.max_lap
         # print(self.max_lap)
@@ -80,15 +93,7 @@ class Ui_Dialog(object):
         if bitarray.bitdiff(curstate, self.laststate):
             self.laststate = curstate
             # print(self.laststate)
-            t = time.time()
-            self.plotTimeGraph()
-            print('Plot laptimes graph:',time.time()-t,'seconds.')
-            t2 = time.time()
-            self.plotGapGraph()
-            print('Plot gap graph:',time.time()-t2,'seconds.')
-            t3 = time.time()
-            self.plotSpaceGapGraph()
-            print('Plot space graph:',time.time()-t3,'seconds.')
+            self.plotAll()
 
 
     def mssmmm2ms(self,time):
@@ -118,14 +123,27 @@ class Ui_Dialog(object):
             for i in range(length):
                 if self.laststate[i]:
                     driver = self.drivers[i]
+
                     timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    pitlaps = []
+                    pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+                    if len(pitdata):
+                        for i in pitdata:
+                            pitlaps.append(i['lap'])
+                            pitlaps.append(i['lap']+1)
                     plot_pool_x = []
                     plot_pool_y = []
                     for k in timing:
                         if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
-                            time = self.mssmmm2ms(k['time'])
-                            plot_pool_x.append(k['lap'])
-                            plot_pool_y.append(time)
+                            if k['lap'] not in pitlaps:
+                                time = self.mssmmm2ms(k['time'])
+                                plot_pool_x.append(k['lap'])
+                                plot_pool_y.append(time)
+                            else:
+                                if not self.hide_pit_eelap:
+                                    time = self.mssmmm2ms(k['time'])
+                                    plot_pool_x.append(k['lap'])
+                                    plot_pool_y.append(time)
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(name)
@@ -139,7 +157,6 @@ class Ui_Dialog(object):
             print(e)
 
     def plotSpaceGapGraph(self):
-        # TODO: Can still be optimized
         # try:
         self.spacegapfig.clear()
         ax = self.spacegapfig.add_subplot(111)
@@ -156,6 +173,7 @@ class Ui_Dialog(object):
                 # print(timing_accum)
                 timing_pools.append(timing_accum)
                 driver_pools.append(driver)
+
         for i in range(len(timing_pools)):
             for j in range(i + 1, len(timing_pools)):
                 plot_pool_x = []
@@ -184,7 +202,6 @@ class Ui_Dialog(object):
         #     print(e)
 
     def plotGapGraph(self):
-        # TODO: Can still be optimized
         # try:
         self.speedgapfig.clear()
         ax = self.speedgapfig.add_subplot(111)
@@ -451,6 +468,9 @@ class Ui_Dialog(object):
         self.SpinBox_2 = QtWidgets.QSpinBox(self.layoutWidget)
         self.SpinBox_2.setObjectName("SpinBox_2")
         self.horizontalLayout_2.addWidget(self.SpinBox_2)
+        self.checkBox = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox.setObjectName("checkBox")
+        self.horizontalLayout_2.addWidget(self.checkBox)
         self.gridLayout.addLayout(self.horizontalLayout_2, 0, 1, 1, 1)
         self.tabWidget = QtWidgets.QTabWidget(self.layoutWidget)
         self.tabWidget.setObjectName("tabWidget")
@@ -530,6 +550,7 @@ class Ui_Dialog(object):
         self.tableWidget.clicked.connect(self.showPos)
         self.SpinBox.valueChanged.connect(self.changeStartLap)
         self.SpinBox_2.valueChanged.connect(self.changeEndLap)
+        self.checkBox.clicked.connect(self.hidePitChecked)
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         self.SpinBox.setEnabled(False)
@@ -538,13 +559,14 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.2"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.4"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Lap Time"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Speed Gap"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Car Gap"))
+        self.checkBox.setText(_translate("Dialog", "Hide pit entry/exit lap"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Dialog", "Lap Time"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Speed Gap"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "Car Gap"))
 
 
 if __name__ == "__main__":
