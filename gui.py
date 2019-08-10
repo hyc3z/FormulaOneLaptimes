@@ -78,8 +78,11 @@ class Ui_Dialog(object):
             self.laststate = curstate
             # print(self.laststate)
             t = time.time()
-            self.plotGraph()
-            print('Plot graph:',time.time()-t,'seconds.')
+            self.plotTimeGraph()
+            print('Plot laptimes graph:',time.time()-t,'seconds.')
+            t2 = time.time()
+            self.plotGapGraph()
+            print('Plot gap graph:',time.time()-t2,'seconds.')
 
     def mssmmm2ms(self,time):
         minute = 0
@@ -96,11 +99,11 @@ class Ui_Dialog(object):
             millisecond = 0
         return millisecond+1000*second+60000*minute
 
-    def plotGraph(self):
+    def plotTimeGraph(self):
         # TODO: Can still be optimized
         try:
-            self.fig.clear()
-            ax = self.fig.add_subplot(111)
+            self.laptimefig.clear()
+            ax = self.laptimefig.add_subplot(111)
             ax.cla()
             legends = []
             length = len(self.drivers)
@@ -118,21 +121,61 @@ class Ui_Dialog(object):
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(name)
-            self.fig.legend(legends,loc=5)
+            self.laptimefig.legend(legends,loc=1)
             self.canvas.draw()  #
         except Exception as e:
             print(e)
-
+    
+    def plotGapGraph(self):
+        # TODO: Can still be optimized
+        # try:
+        self.gapfig.clear()
+        ax = self.gapfig.add_subplot(111)
+        ax.cla()
+        legends = []
+        length = len(self.drivers)
+        timing_pools = []
+        driver_pools = []
+        for i in range(length):
+            if self.laststate[i]:
+                driver = self.drivers[i]
+                timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                timing_pools.append(timing)
+                driver_pools.append(driver)
+        for i in range(len(timing_pools)):
+            for j in range(i+1, len(timing_pools)):
+                plot_pool_x = []
+                plot_pool_y = []
+                for k in range(len(timing_pools[i])):
+                    if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                        try:
+                            time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
+                            time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
+                            delta_time = time0-time1
+                            plot_pool_x.append(timing_pools[i][k]['lap'])
+                            plot_pool_y.append(delta_time)
+                        except IndexError:
+                            pass
+                name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
+                name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
+                ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                legends.append(name0+' and '+name1)
+        self.gapfig.legend(legends, loc=1)
+        self.canvas_2.draw()  #
+        # except Exception as e:
+        #     print(e)
 
     def changeStartLap(self):
         cur_lap = self.SpinBox.value()
         self.SpinBox_2.setMinimum(cur_lap)
         self.min_cal_lap = cur_lap
-        self.plotGraph()
+        self.plotTimeGraph()
+        self.plotGapGraph()
 
     def changeEndLap(self):
         self.max_cal_lap = self.SpinBox_2.value()
-        self.plotGraph()
+        self.plotTimeGraph()
+        self.plotGapGraph()
 
     def initTable(self, drivers, raceId):
         self.tableWidget.setColumnCount(6)
@@ -216,40 +259,40 @@ class Ui_Dialog(object):
             else:
                 if finish_status_Id == 2:
                     finishpos = QtWidgets.QTableWidgetItem("DSQ")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
                 elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
                         or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
                         or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95\
                         or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132\
                         or 135 <= finish_status_Id <= 137:
                     finishpos = QtWidgets.QTableWidgetItem("RET")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 62:
                     finishpos = QtWidgets.QTableWidgetItem("NC")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 77:
                     finishpos = QtWidgets.QTableWidgetItem("107")
                     check.setFlags(
                         QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 81:
                     finishpos = QtWidgets.QTableWidgetItem("DNQ")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 90:
                     finishpos = QtWidgets.QTableWidgetItem("NR")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 96:
                     finishpos = QtWidgets.QTableWidgetItem("EX")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
                 elif finish_status_Id == 97:
                     finishpos = QtWidgets.QTableWidgetItem("DNPQ")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
+                    # check.setFlags(
+                    #     QtCore.Qt.ItemIsSelectable)
             finishpos.setFont(font)
             finishpos.setBackground(color)
             if finish_pos is None:
@@ -432,15 +475,48 @@ class Ui_Dialog(object):
         self.SpinBox_2.setObjectName("SpinBox_2")
         self.horizontalLayout_2.addWidget(self.SpinBox_2)
         self.gridLayout.addLayout(self.horizontalLayout_2, 0, 1, 1, 1)
-        self.fig = plt.Figure()
-        self.canvas = FC(self.fig)
+        self.tabWidget = QtWidgets.QTabWidget(self.layoutWidget)
+        self.tabWidget.setObjectName("tabWidget")
+        self.tab = QtWidgets.QWidget()
+        self.tab.setObjectName("tab")
+        self.tabWidget.addTab(self.tab, "")
+        self.tab_2 = QtWidgets.QWidget()
+        self.tab_2.setObjectName("tab_2")
+        self.tabWidget.addTab(self.tab_2, "")
+        self.gridLayoutWidget = QtWidgets.QWidget(self.tab)
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 10, 511, 541))
+        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.gridLayoutWidget)
+        self.gridLayout_2.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.gridLayoutWidget_2 = QtWidgets.QWidget(self.tab_2)
+        self.gridLayoutWidget_2.setGeometry(QtCore.QRect(10, 10, 511, 541))
+        self.gridLayoutWidget_2.setObjectName("gridLayoutWidget_2")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.gridLayoutWidget_2)
+        self.gridLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.laptimefig = plt.Figure()
+        self.canvas = FC(self.laptimefig)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
         self.canvas.setSizePolicy(sizePolicy)
         self.canvas.setObjectName("canvas")
-        self.gridLayout.addWidget(self.canvas, 2, 1, 1, 1)
+
+        self.gapfig = plt.Figure()
+        self.canvas_2 = FC(self.gapfig)
+        self.canvas_2.setObjectName("canvas_2")
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.canvas_2.sizePolicy().hasHeightForWidth())
+        self.canvas_2.setSizePolicy(sizePolicy)
+        self.gridLayout.addWidget(self.tabWidget, 1, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.canvas, 2, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.canvas_2, 2, 1, 1, 1)
         # Dialog.setCentralWidget(self.centralwidget)
         # self.statusbar = QtWidgets.QStatusBar(Dialog)
         # self.statusbar.setObjectName("statusbar")
@@ -460,11 +536,12 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.3.2"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.4.0"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
-
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Lap Time"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Speed Gap"))
 
 
 if __name__ == "__main__":
