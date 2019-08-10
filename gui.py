@@ -112,6 +112,7 @@ class Ui_Dialog(object):
             self.laptimefig.clear()
             ax = self.laptimefig.add_subplot(111)
             ax.cla()
+            ax.grid()
             legends = []
             length = len(self.drivers)
             for i in range(length):
@@ -129,6 +130,10 @@ class Ui_Dialog(object):
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(name)
             self.laptimefig.legend(legends,loc=1)
+            self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                    bottom=0.13, top=0.91)
+            ax.set_xlabel('laps')
+            ax.set_ylabel('Laptime: ms',labelpad = 0.5)
             self.canvas.draw()  #
         except Exception as e:
             print(e)
@@ -139,6 +144,7 @@ class Ui_Dialog(object):
         self.spacegapfig.clear()
         ax = self.spacegapfig.add_subplot(111)
         ax.cla()
+        ax.grid()
         legends = []
         length = len(self.drivers)
         timing_pools = []
@@ -168,6 +174,10 @@ class Ui_Dialog(object):
                 name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                 ax.plot(plot_pool_x, plot_pool_y, marker=',')
                 legends.append(name0 + ' and ' + name1)
+        self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                        bottom=0.13, top=0.91)
+        ax.set_xlabel('laps')
+        ax.set_ylabel('Gap: ms', labelpad=0.5)
         self.spacegapfig.legend(legends, loc=1)
         self.canvas_3.draw()  #
         # except Exception as e:
@@ -179,6 +189,7 @@ class Ui_Dialog(object):
         self.speedgapfig.clear()
         ax = self.speedgapfig.add_subplot(111)
         ax.cla()
+        ax.grid()
         legends = []
         length = len(self.drivers)
         timing_pools = []
@@ -207,6 +218,10 @@ class Ui_Dialog(object):
                 name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                 ax.plot(plot_pool_x, plot_pool_y, marker=',')
                 legends.append(name0+' and '+name1)
+        self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                         bottom=0.13, top=0.91)
+        ax.set_xlabel('laps')
+        ax.set_ylabel('Speed Difference: ms', labelpad=0.5)
         self.speedgapfig.legend(legends, loc=1)
         self.canvas_2.draw()  #
         # except Exception as e:
@@ -361,93 +376,6 @@ class Ui_Dialog(object):
 
             self.tableWidget.setItem(rowcount, 5, check)
             rowcount += 1
-
-    # def setupUi(self, Dialog):
-    #     Dialog.setObjectName("Dialog")
-    #     Dialog.resize(1102, 691)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
-    #     Dialog.setSizePolicy(sizePolicy)
-    #     Dialog.setMinimumSize(QtCore.QSize(800, 600))
-    #     Dialog.setMaximumSize(QtCore.QSize(8000, 6000))
-    #     self.centralwidget = QtWidgets.QWidget(Dialog)
-    #     self.centralwidget.setObjectName("centralwidget")
-    #     self.widget = QtWidgets.QWidget(self.centralwidget)
-    #     self.widget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
-    #     self.widget.setObjectName("widget")
-    #     self.gridLayout = QtWidgets.QGridLayout(self.widget)
-    #     self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-    #     self.gridLayout.setContentsMargins(0, 0, 0, 0)
-    #     self.gridLayout.setObjectName("gridLayout")
-    #     self.horizontalLayout = QtWidgets.QHBoxLayout()
-    #     self.horizontalLayout.setObjectName("horizontalLayout")
-    #     self.comboBox = QtWidgets.QComboBox(self.widget)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(self.comboBox.sizePolicy().hasHeightForWidth())
-    #     self.comboBox.setSizePolicy(sizePolicy)
-    #     self.comboBox.setMaximumSize(QtCore.QSize(16777215, 30))
-    #     self.comboBox.setCurrentText("")
-    #     self.comboBox.setObjectName("comboBox")
-    #     self.horizontalLayout.addWidget(self.comboBox)
-    #     self.comboBox_2 = QtWidgets.QComboBox(self.widget)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(self.comboBox_2.sizePolicy().hasHeightForWidth())
-    #     self.comboBox_2.setSizePolicy(sizePolicy)
-    #     self.comboBox_2.setMaximumSize(QtCore.QSize(16777215, 30))
-    #     self.comboBox_2.setObjectName("comboBox_2")
-    #     self.horizontalLayout.addWidget(self.comboBox_2)
-    #     self.pushButton = QtWidgets.QPushButton(self.widget)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
-    #     self.pushButton.setSizePolicy(sizePolicy)
-    #     self.pushButton.setMaximumSize(QtCore.QSize(16777215, 30))
-    #     self.pushButton.setObjectName("pushButton")
-    #     self.horizontalLayout.addWidget(self.pushButton)
-    #     self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
-    #     self.graphicsView = QtWidgets.QGraphicsView(self.widget)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
-    #     self.graphicsView.setSizePolicy(sizePolicy)
-    #     self.graphicsView.setObjectName("graphicsView")
-    #     self.gridLayout.addWidget(self.graphicsView, 0, 1, 2, 1)
-    #     self.tableWidget = QtWidgets.QTableWidget(self.widget)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
-    #     self.tableWidget.setSizePolicy(sizePolicy)
-    #     self.tableWidget.setObjectName("tableWidget")
-    #     self.tableWidget.setColumnCount(0)
-    #     self.tableWidget.setRowCount(0)
-    #     self.gridLayout.addWidget(self.tableWidget, 1, 0, 2, 1)
-    #     self.canvas = QtWidgets.QGraphicsView(self.widget)
-    #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-    #     sizePolicy.setHorizontalStretch(0)
-    #     sizePolicy.setVerticalStretch(0)
-    #     sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
-    #     self.canvas.setSizePolicy(sizePolicy)
-    #     self.canvas.setObjectName("canvas")
-    #     self.gridLayout.addWidget(self.canvas, 2, 1, 1, 1)
-    #     Dialog.setCentralWidget(self.centralwidget)
-    #     self.statusbar = QtWidgets.QStatusBar(Dialog)
-    #     self.statusbar.setObjectName("statusbar")
-    #     Dialog.setStatusBar(self.statusbar)
-    #     self.retranslateUi(Dialog)
-    #     QtCore.QMetaObject.connectSlotsByName(Dialog)
-    #     self.initialize()
-    #     self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
-    #     self.pushButton.clicked.connect(self.getDriversInThisRace)
-    #     self.tableWidget.clicked.connect(self.showPos)
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -610,13 +538,14 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.0"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.2"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Lap Time"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Speed Gap"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Car Gap"))
+
 
 if __name__ == "__main__":
     import sys
