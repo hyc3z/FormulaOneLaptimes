@@ -97,6 +97,14 @@ class f1db:
         self.cur.execute('select name from races where year='+str(year)+' order by name asc')
         return self.cur.fetchall()
 
+    def getLatestRaceThisYear(self,year):
+        self.cur.execute('select max(raceId) from races where year='+str(year)+' and raceId in (select raceId from lapTimes)')
+        return self.cur.fetchall()
+
+    def getRaceNameByRaceId(self,raceId):
+        self.cur.execute('select name from races where raceId='+str(raceId))
+        return self.cur.fetchall()
+
     def getRaceIDByYearName(self,year,name):
         self.cur.execute('SELECT * from races where year='+str(year)+' and name="'+name+'"')
         return self.cur.fetchall()
@@ -147,6 +155,10 @@ class f1db:
 
     def getLaptimesViaDriverIDRaceID(self, driverId, raceId):
         self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId))
+        return self.cur.fetchall()
+
+    def getMaximumLap(self,raceId):
+        self.cur.execute('SELECT max(lap) from lapTimes where raceId='+str(raceId))
         return self.cur.fetchall()
 
     def saveLapTimesCsv(self,raceID,savedir):
