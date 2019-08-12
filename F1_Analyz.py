@@ -77,6 +77,27 @@ class f1db:
         self.seasons = self.query('SELECT * from seasons')
         self.status = self.query('SELECT * from status')
 
+    def createStints(self):
+        self.cur.execute('DROP table if exists stints')
+        self.cur.execute('create table stints(driverId int, driverNum int, raceId int,lap_on int, stint int,laps int, tyre int)')
+        for i in range(1010, 1022):
+            # print(i)
+            drivers = self.getDriversByRaceID(i)
+            for k in drivers:
+                self.cur.execute('insert into stints(driverId, driverNum, raceId, lap_on, stint) values('+str(k['driverId'])+','+str(k['number'])+','+str(i)+','+str(1)+','+str(1)+')')
+            data = self.getPitstopsByRaceId(i)
+            for j in data:
+                driverid = j['driverId']
+                num = self.getDriverNumByDriverId(driverid)
+                if num is not None:
+                    num = num[0]['number']
+                lap_on = j['lap']
+                stint = j['stop']+1
+                # print('insert into stints(driverId, raceId, lap_on, stint) values('+str(driverid)+','+str(i)+','+str(lap_on)+','+str(stint)+')')
+                self.cur.execute('insert into stints(driverId, driverNum, raceId, lap_on, stint) values('+str(driverid)+','+str(num)+','+str(i)+','+str(lap_on)+','+str(stint)+')')
+
+        self.conn.commit()
+
     def execute(self,sql):
         start_time = time.time()
         try:
@@ -87,6 +108,10 @@ class f1db:
 
     def getPitstopsByRaceId(self,raceId):
         self.cur.execute('select * from pitStops where raceId='+str(raceId))
+        return self.cur.fetchall()
+
+    def getDriverNumByDriverId(self, driverId):
+        self.cur.execute('select number from drivers where driverId='+str(driverId))
         return self.cur.fetchall()
 
     def getPitstopByRaceIdDriverId(self, raceId, driverId):
@@ -131,7 +156,7 @@ class f1db:
         return self.cur.fetchall()
 
     def getDriversByRaceID(self,RaceID):
-        self.cur.execute('select code,forename,surname,driverId from drivers where driverId in (SELECT driverId from lapTimes where lap=1 and raceId='+str(RaceID)+') order by forename asc')
+        self.cur.execute('select code,forename,surname,driverId,number from drivers where driverId in (SELECT driverId from lapTimes where lap=1 and raceId='+str(RaceID)+') order by forename asc')
         return self.cur.fetchall()
 
     def getGridByRaceID(self,raceID):
@@ -225,6 +250,6 @@ class f1db:
 if __name__ == '__main__':
     db = f1db()
     # db.getLapTimes(90, 'Laptimes')
-    print(db.getResultStandingByRaceIDandDriverId(1021,1))
-
+    # print(db.getResultStandingByRaceIDandDriverId(1021,1))
+    # db.createStints()
 
