@@ -67,10 +67,10 @@ class Ui_Dialog(object):
 
 
     def plotAll(self):
-        # self.plotTimeGraph()
-        # self.plotSpaceGapGraph()
-        # self.plotGapGraph()
-        pass
+        self.plotTimeGraph()
+        self.plotSpaceGapGraph()
+        self.plotGapGraph()
+        # pass
 
 
     def hidePitChecked(self):
@@ -120,14 +120,7 @@ class Ui_Dialog(object):
 
     def showPos(self):
 
-        if self.tableWidget.currentItem() is not None:
-            print(self.tableWidget.currentItem().row(),self.tableWidget.currentItem().column())
-        else:
-            print('None')
-            # for i in range(self.tableWidget.rowCount()):
-            #     check_boxes = self.tableWidget.cellWidget(i,6).findChildren(QtWidgets.QCheckBox)
-            #     for i in check_boxes:
-            #         print(i.objectName(),i.checkState())
+
         length = self.tableWidget.rowCount()
         curstate = bitarray.bitarray(length)
         curstate.setall(False)
@@ -155,44 +148,88 @@ class Ui_Dialog(object):
             millisecond = 0
         return millisecond+1000*second+60000*minute
 
+    # def plotTimeGraph(self):
+    #     try:
+    #         self.laptimefig.clear()
+    #         ax = self.laptimefig.add_subplot(111)
+    #         ax.cla()
+    #         ax.grid()
+    #         legends = []
+    #         for i in self.plot_list:
+    #
+    #             string = i.split('-')
+    #             row_num = string[0]
+    #             col_num = string[1]
+    #             check_num = string[2]
+    #             # TODO:Finish Database
+    #             # start_lap =
+    #             timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+    #             pitlaps = []
+    #             pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+    #             if len(pitdata):
+    #                 for i in pitdata:
+    #                     pitlaps.append(i['lap'])
+    #                     pitlaps.append(i['lap']+1)
+    #             plot_pool_x = []
+    #             plot_pool_y = []
+    #             for k in timing:
+    #                 if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
+    #                     if k['lap'] not in pitlaps:
+    #                         time = self.mssmmm2ms(k['time'])
+    #                         plot_pool_x.append(k['lap'])
+    #                         plot_pool_y.append(time)
+    #                     else:
+    #                         if not self.hide_pit_eelap:
+    #                             time = self.mssmmm2ms(k['time'])
+    #                             plot_pool_x.append(k['lap'])
+    #                             plot_pool_y.append(time)
+    #             name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+    #             ax.plot(plot_pool_x, plot_pool_y, marker=',')
+    #             legends.append(name)
+    #         self.laptimefig.legend(legends,loc=1)
+    #         self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+    #                 bottom=0.13, top=0.91)
+    #         ax.set_xlabel('laps')
+    #         ax.set_ylabel('Laptime: ms',labelpad = 0.5)
+    #         self.canvas.draw()  #
+    #     except Exception as e:
+    #         print(e)
     def plotTimeGraph(self):
+        # TODO: Can still be optimized
         try:
             self.laptimefig.clear()
             ax = self.laptimefig.add_subplot(111)
             ax.cla()
             ax.grid()
             legends = []
-            for i in self.plot_list:
+            length = len(self.drivers)
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
 
-                string = i.split('-')
-                row_num = string[0]
-                col_num = string[1]
-                check_num = string[2]
-                # TODO:Finish Database
-                # start_lap =
-                timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
-                pitlaps = []
-                pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
-                if len(pitdata):
-                    for i in pitdata:
-                        pitlaps.append(i['lap'])
-                        pitlaps.append(i['lap']+1)
-                plot_pool_x = []
-                plot_pool_y = []
-                for k in timing:
-                    if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
-                        if k['lap'] not in pitlaps:
-                            time = self.mssmmm2ms(k['time'])
-                            plot_pool_x.append(k['lap'])
-                            plot_pool_y.append(time)
-                        else:
-                            if not self.hide_pit_eelap:
+                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    pitlaps = []
+                    pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+                    if len(pitdata):
+                        for i in pitdata:
+                            pitlaps.append(i['lap'])
+                            pitlaps.append(i['lap']+1)
+                    plot_pool_x = []
+                    plot_pool_y = []
+                    for k in timing:
+                        if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
+                            if k['lap'] not in pitlaps:
                                 time = self.mssmmm2ms(k['time'])
                                 plot_pool_x.append(k['lap'])
                                 plot_pool_y.append(time)
-                name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
-                ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                legends.append(name)
+                            else:
+                                if not self.hide_pit_eelap:
+                                    time = self.mssmmm2ms(k['time'])
+                                    plot_pool_x.append(k['lap'])
+                                    plot_pool_y.append(time)
+                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    legends.append(name)
             self.laptimefig.legend(legends,loc=1)
             self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                     bottom=0.13, top=0.91)
@@ -201,6 +238,7 @@ class Ui_Dialog(object):
             self.canvas.draw()  #
         except Exception as e:
             print(e)
+
 
     def plotSpaceGapGraph(self):
         # try:
@@ -318,185 +356,336 @@ class Ui_Dialog(object):
 
 
     def initTable(self, drivers, raceId):
-        self.tableWidget.setColumnCount(6)
-        self.laststate = bitarray.bitarray(len(drivers))
-        self.lastplotedstate = bitarray.bitarray(len(drivers))
-        self.drivers = drivers
-        self.raceId = raceId
-        self.laststate.setall(False)
-        self.lastplotedstate.setall(False)
-        self.tableWidget.verticalHeader().setVisible(False)
-        self.tableWidget.horizontalHeader().setStretchLastSection(False)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
-        # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
-        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'End', 'Pits','Tyre'])
-        self.tableWidget.setRowCount(len(drivers))
-        rowcount = 0
-        # self.pitstops = self.db.getPitstopsByRaceId(raceId)
+        stint_data = self.db.getTyreStintByRaceId(raceId)
+        if len(stint_data):
+            self.tableWidget.setColumnCount(6)
+            self.laststate = bitarray.bitarray(len(drivers))
+            self.lastplotedstate = bitarray.bitarray(len(drivers))
+            self.drivers = drivers
+            self.raceId = raceId
+            self.laststate.setall(False)
+            self.lastplotedstate.setall(False)
+            self.tableWidget.verticalHeader().setVisible(False)
+            self.tableWidget.horizontalHeader().setStretchLastSection(False)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
+            self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'End', 'Pits','Tyre'])
+            self.tableWidget.setRowCount(len(drivers))
+            rowcount = 0
+            # self.pitstops = self.db.getPitstopsByRaceId(raceId)
 
-        for num in range(len(drivers)):
-            i = drivers[num]
-            # table_color = QtGui.QPalette()
-            # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
-            pitstops = self.db.getPitstopByRaceIdDriverId(raceId,i['driverId'])
-            pitstop_counts = len(pitstops)
-            font = QtGui.QFont()
-            color = QtGui.QColor(192, 192, 192,128)
-            finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
-            finish_pos = finish_pos_raw[0]['position']
-            start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId,i['driverId'])
-            try:
-                start_pos = start_pos_raw[0]['position']
-            except IndexError:
-                start_pos = ''
-            finish_status_Id = self.db.getResultStatusIDByRaceIDandDriverID(raceId, i['driverId'])[0]['statusId']
-            finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
-            driver_detail = self.db.getDriversByDriverID(i['driverId'])
-            check = QtWidgets.QTableWidgetItem()
-            check.setCheckState(QtCore.Qt.Unchecked)
-            check.setBackground(color)
-            if finish_pos is not None:
-                if finish_pos == 1:
-                    color = QtGui.QColor(255, 215, 0, 128)
-                elif finish_pos == 2:
-                    color = QtGui.QColor(128, 128, 128, 128)
-                elif finish_pos == 3:
-                    color = QtGui.QColor(198, 145, 69, 128)
-                elif 4 <= finish_pos <= 10:
-                    color = QtGui.QColor(0, 255, 229, 128)
-            else:
-                color = QtGui.QColor(64, 64, 64, 128)
+            for num in range(len(drivers)):
+                i = drivers[num]
+                # table_color = QtGui.QPalette()
+                # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
+                pitstops = self.db.getPitstopByRaceIdDriverId(raceId,i['driverId'])
+                pitstop_counts = len(pitstops)
+                font = QtGui.QFont()
+                color = QtGui.QColor(192, 192, 192,128)
+                finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
+                finish_pos = finish_pos_raw[0]['position']
+                start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId,i['driverId'])
+                try:
+                    start_pos = start_pos_raw[0]['position']
+                except IndexError:
+                    start_pos = ''
+                finish_status_Id = self.db.getResultStatusIDByRaceIDandDriverID(raceId, i['driverId'])[0]['statusId']
+                finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
+                driver_detail = self.db.getDriversByDriverID(i['driverId'])
+                check = QtWidgets.QTableWidgetItem()
+                check.setCheckState(QtCore.Qt.Unchecked)
+                check.setBackground(color)
+                if finish_pos is not None:
+                    if finish_pos == 1:
+                        color = QtGui.QColor(255, 215, 0, 128)
+                    elif finish_pos == 2:
+                        color = QtGui.QColor(128, 128, 128, 128)
+                    elif finish_pos == 3:
+                        color = QtGui.QColor(198, 145, 69, 128)
+                    elif 4 <= finish_pos <= 10:
+                        color = QtGui.QColor(0, 255, 229, 128)
+                else:
+                    color = QtGui.QColor(64, 64, 64, 128)
 
-            if start_pos == 1:
-                font.setBold(True)
-            item0 = QtWidgets.QTableWidgetItem(str(driver_detail[0]['code']))
-            item0.setFont(font)
-            item0.setBackground(color)
+                if start_pos == 1:
+                    font.setBold(True)
+                item0 = QtWidgets.QTableWidgetItem(str(driver_detail[0]['code']))
+                item0.setFont(font)
+                item0.setBackground(color)
 
-            check.setBackground(color)
-            if finish_pos is None:
-                item0.setForeground(QtGui.QColor(255, 255, 255))
-            item0.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            self.tableWidget.setItem(rowcount, 0, item0)
-            item1 = QtWidgets.QTableWidgetItem(driver_detail[0]['forename'] + ' ' + driver_detail[0]['surname'])
-            item1.setFont(font)
-            item1.setBackground(color)
-            if finish_pos is None:
-                item1.setForeground(QtGui.QColor(255, 255, 255))
-            item1.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            self.tableWidget.setItem(rowcount, 1, item1)
-            startpos = QtWidgets.QTableWidgetItem(str(start_pos))
-            startpos.setBackground(color)
-            startpos.setFont(font)
-            if finish_pos is None:
-                startpos.setForeground(QtGui.QColor(255, 255, 255))
-            startpos.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            self.tableWidget.setItem(rowcount, 2, startpos)
-            if finish_pos is not None:
-                finishpos = QtWidgets.QTableWidgetItem(str(finish_pos))
-            else:
-                if finish_status_Id == 2:
-                    finishpos = QtWidgets.QTableWidgetItem("DSQ")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-                elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
-                        or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
-                        or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95\
-                        or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132\
-                        or 135 <= finish_status_Id <= 137:
-                    finishpos = QtWidgets.QTableWidgetItem("RET")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-                elif finish_status_Id == 62:
-                    finishpos = QtWidgets.QTableWidgetItem("NC")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-                elif finish_status_Id == 77:
-                    finishpos = QtWidgets.QTableWidgetItem("107")
-                    check.setFlags(
-                        QtCore.Qt.ItemIsSelectable)
-                elif finish_status_Id == 81:
-                    finishpos = QtWidgets.QTableWidgetItem("DNQ")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-                elif finish_status_Id == 90:
-                    finishpos = QtWidgets.QTableWidgetItem("NR")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-                elif finish_status_Id == 96:
-                    finishpos = QtWidgets.QTableWidgetItem("EX")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-                elif finish_status_Id == 97:
-                    finishpos = QtWidgets.QTableWidgetItem("DNPQ")
-                    # check.setFlags(
-                    #     QtCore.Qt.ItemIsSelectable)
-            finishpos.setFont(font)
-            finishpos.setBackground(color)
-            if finish_pos is None:
-                finishpos.setForeground(QtGui.QColor(255, 255, 255))
-            finishpos.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            self.tableWidget.setItem(rowcount, 3, finishpos)
-            pitstops = QtWidgets.QTableWidgetItem(str(pitstop_counts))
-            # pitstops.setCheckState(QtCore.Qt.Unchecked)
-            pitstops.setFont(font)
-            pitstops.setBackground(color)
-            pitstops.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            if finish_pos is None:
-                pitstops.setForeground(QtGui.QColor(255, 255, 255))
-            self.tableWidget.setItem(rowcount, 4, pitstops)
+                check.setBackground(color)
+                if finish_pos is None:
+                    item0.setForeground(QtGui.QColor(255, 255, 255))
+                item0.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 0, item0)
+                item1 = QtWidgets.QTableWidgetItem(driver_detail[0]['forename'] + ' ' + driver_detail[0]['surname'])
+                item1.setFont(font)
+                item1.setBackground(color)
+                if finish_pos is None:
+                    item1.setForeground(QtGui.QColor(255, 255, 255))
+                item1.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 1, item1)
+                startpos = QtWidgets.QTableWidgetItem(str(start_pos))
+                startpos.setBackground(color)
+                startpos.setFont(font)
+                if finish_pos is None:
+                    startpos.setForeground(QtGui.QColor(255, 255, 255))
+                startpos.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 2, startpos)
+                if finish_pos is not None:
+                    finishpos = QtWidgets.QTableWidgetItem(str(finish_pos))
+                else:
+                    if finish_status_Id == 2:
+                        finishpos = QtWidgets.QTableWidgetItem("DSQ")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
+                            or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
+                            or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95\
+                            or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132\
+                            or 135 <= finish_status_Id <= 137:
+                        finishpos = QtWidgets.QTableWidgetItem("RET")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 62:
+                        finishpos = QtWidgets.QTableWidgetItem("NC")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 77:
+                        finishpos = QtWidgets.QTableWidgetItem("107")
+                        check.setFlags(
+                            QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 81:
+                        finishpos = QtWidgets.QTableWidgetItem("DNQ")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 90:
+                        finishpos = QtWidgets.QTableWidgetItem("NR")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 96:
+                        finishpos = QtWidgets.QTableWidgetItem("EX")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 97:
+                        finishpos = QtWidgets.QTableWidgetItem("DNPQ")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                finishpos.setFont(font)
+                finishpos.setBackground(color)
+                if finish_pos is None:
+                    finishpos.setForeground(QtGui.QColor(255, 255, 255))
+                finishpos.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 3, finishpos)
+                pitstops = QtWidgets.QTableWidgetItem(str(pitstop_counts))
+                # pitstops.setCheckState(QtCore.Qt.Unchecked)
+                pitstops.setFont(font)
+                pitstops.setBackground(color)
+                pitstops.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                if finish_pos is None:
+                    pitstops.setForeground(QtGui.QColor(255, 255, 255))
+                self.tableWidget.setItem(rowcount, 4, pitstops)
 
-            list_height = 20
-            # tyre_stints = [{'lap_on':1,'laps':1,'tyre':0},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':20,'laps':32,'tyre':4},{'lap_on':52,'laps':54,'tyre':6},{'lap_on':106,'laps':60,'tyre':8}]
-            tyre_stints = self.db.getTyreStintsByRaceIdDriverId(raceId, i['driverId'])
-            layout_tyres = QtWidgets.QHBoxLayout()
-            layout_tyres.setAlignment(QtCore.Qt.AlignLeft)
-            pal = QtGui.QPalette()
-            pal.setColor(QtGui.QPalette.Base, color)
-            check_count = 0
-            for i in tyre_stints:
-                label_stint = QtWidgets.QLabel()
-                label_stint.setFixedWidth(20)
-                label_stint.setPixmap(self.tyre_img[i['tyreName']].scaled(list_height,list_height))
-                label_stint.setAutoFillBackground(True)
-                laps_stint = QtWidgets.QLabel()
-                laps_stint.setFixedWidth(18)
-                laps_stint.setText(str(i['laps']))
-                stint_1 = QtWidgets.QCheckBox()
-                stint_1.setFixedWidth(30)
-                # stint_1.setFixedHeight(list_height)
-                stint_1.setCheckState(QtCore.Qt.Unchecked)
-                stint_1.setObjectName(str(rowcount)+'-'+str(5)+'-'+str(check_count))
-                self.checkbox.append(stint_1)
-                # print(self.checkbox)
-                check_count += 1
-                check_color = QtGui.QPalette()
-                check_color.setColor(QtGui.QPalette.Base,QtGui.QColor(255,255,255))
-                stint_1.setPalette(check_color)
-                layout_tyres.addWidget(label_stint, QtCore.Qt.AlignLeft)
-                layout_tyres.addWidget(laps_stint, QtCore.Qt.AlignLeft)
-                layout_tyres.addWidget(stint_1, QtCore.Qt.AlignLeft)
-            cellWidget = QtWidgets.QWidget()
-            cellWidget.setLayout(layout_tyres)
-            cellWidget.setAutoFillBackground(True)
-            cellWidget.setPalette(pal)
-            self.tableWidget.setCellWidget(rowcount, 5, cellWidget)
-            # self.tableWidget.setItem(rowcount, 0, check)
-            self.tableWidget.resizeRowToContents(rowcount)
-            rowcount += 1
-        self.connection()
+                list_height = 20
+                # tyre_stints = [{'lap_on':1,'laps':1,'tyre':0},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':20,'laps':32,'tyre':4},{'lap_on':52,'laps':54,'tyre':6},{'lap_on':106,'laps':60,'tyre':8}]
+                tyre_stints = self.db.getTyreStintsByRaceIdDriverId(raceId, i['driverId'])
+                layout_tyres = QtWidgets.QHBoxLayout()
+                layout_tyres.setAlignment(QtCore.Qt.AlignLeft)
+                pal = QtGui.QPalette()
+                pal.setColor(QtGui.QPalette.Base, color)
+                check_count = 0
+                for i in tyre_stints:
+                    label_stint = QtWidgets.QLabel()
+                    label_stint.setFixedWidth(20)
+                    label_stint.setPixmap(self.tyre_img[i['tyreName']].scaled(list_height,list_height))
+                    label_stint.setAutoFillBackground(True)
+                    laps_stint = QtWidgets.QLabel()
+                    laps_stint.setFixedWidth(18)
+                    laps_stint.setText(str(i['laps']))
+                    stint_1 = QtWidgets.QCheckBox()
+                    stint_1.setFixedWidth(30)
+                    # stint_1.setFixedHeight(list_height)
+                    stint_1.setCheckState(QtCore.Qt.Unchecked)
+                    stint_1.setObjectName(str(rowcount)+'-'+str(5)+'-'+str(check_count))
+                    self.checkbox.append(stint_1)
+                    # print(self.checkbox)
+                    check_count += 1
+                    check_color = QtGui.QPalette()
+                    check_color.setColor(QtGui.QPalette.Base,QtGui.QColor(255,255,255))
+                    stint_1.setPalette(check_color)
+                    layout_tyres.addWidget(label_stint, QtCore.Qt.AlignLeft)
+                    layout_tyres.addWidget(laps_stint, QtCore.Qt.AlignLeft)
+                    layout_tyres.addWidget(stint_1, QtCore.Qt.AlignLeft)
+                cellWidget = QtWidgets.QWidget()
+                cellWidget.setLayout(layout_tyres)
+                cellWidget.setAutoFillBackground(True)
+                cellWidget.setPalette(pal)
+                self.tableWidget.setCellWidget(rowcount, 5, cellWidget)
+                # self.tableWidget.setItem(rowcount, 0, check)
+                self.tableWidget.resizeRowToContents(rowcount)
+                rowcount += 1
+            self.connection()
+        else:
+            self.tableWidget.clearContents()
+            self.tableWidget.setColumnCount(6)
+            self.laststate = bitarray.bitarray(len(drivers))
+            self.lastplotedstate = bitarray.bitarray(len(drivers))
+            self.drivers = drivers
+            self.raceId = raceId
+            self.laststate.setall(False)
+            self.lastplotedstate.setall(False)
+            self.tableWidget.verticalHeader().setVisible(False)
+            self.tableWidget.horizontalHeader().setStretchLastSection(False)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
+            self.tableWidget.setHorizontalHeaderLabels(['Checked','Code', 'Name', 'Grid', 'End', 'Pits'])
+            self.tableWidget.setRowCount(len(drivers))
+            rowcount = 0
+            # self.pitstops = self.db.getPitstopsByRaceId(raceId)
+
+            for num in range(len(drivers)):
+                i = drivers[num]
+                # table_color = QtGui.QPalette()
+                # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
+                pitstops = self.db.getPitstopByRaceIdDriverId(raceId, i['driverId'])
+                pitstop_counts = len(pitstops)
+                font = QtGui.QFont()
+                color = QtGui.QColor(192, 192, 192, 128)
+                finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
+                finish_pos = finish_pos_raw[0]['position']
+                start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId, i['driverId'])
+                try:
+                    start_pos = start_pos_raw[0]['position']
+                except IndexError:
+                    start_pos = ''
+                finish_status_Id = self.db.getResultStatusIDByRaceIDandDriverID(raceId, i['driverId'])[0]['statusId']
+                finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
+                driver_detail = self.db.getDriversByDriverID(i['driverId'])
+                check = QtWidgets.QTableWidgetItem()
+                check.setCheckState(QtCore.Qt.Unchecked)
+                check.setBackground(color)
+                if finish_pos is not None:
+                    if finish_pos == 1:
+                        color = QtGui.QColor(255, 215, 0, 128)
+                    elif finish_pos == 2:
+                        color = QtGui.QColor(128, 128, 128, 128)
+                    elif finish_pos == 3:
+                        color = QtGui.QColor(198, 145, 69, 128)
+                    elif 4 <= finish_pos <= 10:
+                        color = QtGui.QColor(0, 255, 229, 128)
+                else:
+                    color = QtGui.QColor(64, 64, 64, 128)
+
+                if start_pos == 1:
+                    font.setBold(True)
+                item0 = QtWidgets.QTableWidgetItem(str(driver_detail[0]['code']))
+                item0.setFont(font)
+                item0.setBackground(color)
+
+                check.setBackground(color)
+                if finish_pos is None:
+                    item0.setForeground(QtGui.QColor(255, 255, 255))
+                item0.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 1, item0)
+                item1 = QtWidgets.QTableWidgetItem(driver_detail[0]['forename'] + ' ' + driver_detail[0]['surname'])
+                item1.setFont(font)
+                item1.setBackground(color)
+                if finish_pos is None:
+                    item1.setForeground(QtGui.QColor(255, 255, 255))
+                item1.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 2, item1)
+                startpos = QtWidgets.QTableWidgetItem(str(start_pos))
+                startpos.setBackground(color)
+                startpos.setFont(font)
+                if finish_pos is None:
+                    startpos.setForeground(QtGui.QColor(255, 255, 255))
+                startpos.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 3, startpos)
+                if finish_pos is not None:
+                    finishpos = QtWidgets.QTableWidgetItem(str(finish_pos))
+                else:
+                    if finish_status_Id == 2:
+                        finishpos = QtWidgets.QTableWidgetItem("DSQ")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
+                            or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
+                            or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95 \
+                            or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132 \
+                            or 135 <= finish_status_Id <= 137:
+                        finishpos = QtWidgets.QTableWidgetItem("RET")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 62:
+                        finishpos = QtWidgets.QTableWidgetItem("NC")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 77:
+                        finishpos = QtWidgets.QTableWidgetItem("107")
+                        check.setFlags(
+                            QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 81:
+                        finishpos = QtWidgets.QTableWidgetItem("DNQ")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 90:
+                        finishpos = QtWidgets.QTableWidgetItem("NR")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 96:
+                        finishpos = QtWidgets.QTableWidgetItem("EX")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                    elif finish_status_Id == 97:
+                        finishpos = QtWidgets.QTableWidgetItem("DNPQ")
+                        # check.setFlags(
+                        #     QtCore.Qt.ItemIsSelectable)
+                finishpos.setFont(font)
+                finishpos.setBackground(color)
+                if finish_pos is None:
+                    finishpos.setForeground(QtGui.QColor(255, 255, 255))
+                finishpos.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.tableWidget.setItem(rowcount, 4, finishpos)
+                pitstops = QtWidgets.QTableWidgetItem(str(pitstop_counts))
+                # pitstops.setCheckState(QtCore.Qt.Unchecked)
+                pitstops.setFont(font)
+                pitstops.setBackground(color)
+                pitstops.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                if finish_pos is None:
+                    pitstops.setForeground(QtGui.QColor(255, 255, 255))
+                self.tableWidget.setItem(rowcount, 5, pitstops)
+                check = QtWidgets.QTableWidgetItem()
+                check.setCheckState(QtCore.Qt.Unchecked)
+                check.setFlags(
+                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
+                check.setBackground(color)
+                self.tableWidget.setItem(rowcount, 0, check)
+                rowcount += 1
+
 
 
     def connection(self):
@@ -656,7 +845,7 @@ class Ui_Dialog(object):
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
-        # self.tableWidget.clicked.connect(self.showPos)
+        self.tableWidget.clicked.connect(self.showPos)
 
         self.SpinBox.valueChanged.connect(self.changeStartLap)
         self.SpinBox_2.valueChanged.connect(self.changeEndLap)

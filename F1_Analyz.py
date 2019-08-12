@@ -179,6 +179,10 @@ class f1db:
         self.cur.execute('select * from stints where raceId='+str(raceId)+' and driverId='+str(driverId))
         return self.cur.fetchall()
 
+    def getTyreStintByRaceId(self, raceId):
+        self.cur.execute('select * from stints where raceId='+str(raceId))
+        return self.cur.fetchall()
+
     def getResultStatusIDByRaceIDandDriverID(self,raceID, driverId):
         # self.cur.execute('select status from status where statusId in (select statusId from results where raceId='+str(raceID)+' order by position asc)')
         self.cur.execute('select statusId from results where raceId='+str(raceID)+' and driverId='+str(driverId)+' order by position asc')
