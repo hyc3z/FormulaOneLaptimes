@@ -14,12 +14,41 @@ import matplotlib.pyplot as plt
 import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
 
+
+
 class Ui_Dialog(object):
 
     def __init__(self):
         self.db = f1db()
+        self.checkbox  = []
         self.years_recorded_in_lap_times = self.db.getAllYearsRecordedInLaptimes()
         self.race_names_recorded_in_lap_times = self.db.getAllRaceNameRecordedInLaptimes()
+        self.soft_img = QtGui.QPixmap('Imgs/soft.PNG')
+        self.soft_used_img = QtGui.QPixmap('Imgs/soft_used.PNG')
+        self.medium_img = QtGui.QPixmap('Imgs/medium.PNG')
+        self.medium_used_img = QtGui.QPixmap('Imgs/medium_used.PNG')
+        self.hard_img = QtGui.QPixmap('Imgs/hard.PNG')
+        self.hard_used_img = QtGui.QPixmap('Imgs/hard_used.PNG')
+        self.inter_img = QtGui.QPixmap('Imgs/inter.PNG')
+        self.inter_used_img = QtGui.QPixmap('Imgs/inter_used.PNG')
+        self.wet_img = QtGui.QPixmap('Imgs/wet.PNG')
+        self.wet_used_img = QtGui.QPixmap('Imgs/wet_used.PNG')
+        self.tyre_img = []
+        self.tyre_img.append(self.hard_img)
+        self.tyre_img.append(self.hard_used_img)
+        self.tyre_img.append(self.inter_img)
+        self.tyre_img.append(self.inter_used_img)
+        self.tyre_img.append(self.medium_img)
+        self.tyre_img.append(self.medium_used_img)
+        self.tyre_img.append(self.soft_img)
+        self.tyre_img.append(self.soft_used_img)
+        self.tyre_img.append(self.wet_img)
+        self.tyre_img.append(self.wet_used_img)
+        self.plot_list = []
+
+
+
+
 
     def initialize(self):
         self.hide_pit_eelap = False
@@ -38,9 +67,10 @@ class Ui_Dialog(object):
 
 
     def plotAll(self):
-        self.plotTimeGraph()
-        self.plotSpaceGapGraph()
-        self.plotGapGraph()
+        # self.plotTimeGraph()
+        # self.plotSpaceGapGraph()
+        # self.plotGapGraph()
+        pass
 
 
     def hidePitChecked(self):
@@ -61,6 +91,7 @@ class Ui_Dialog(object):
         # self.canvas_2.clear()
         # self.spacegapfig.clear()
         # self.speedgapfig.clear()
+        self.checkbox = []
         year = self.comboBox.currentText()
         race_name = self.comboBox_2.currentText()
         raceId = self.db.getRaceIDByYearName(year, race_name)
@@ -88,11 +119,20 @@ class Ui_Dialog(object):
             self.SpinBox.setEnabled(False)
 
     def showPos(self):
+
+        if self.tableWidget.currentItem() is not None:
+            print(self.tableWidget.currentItem().row(),self.tableWidget.currentItem().column())
+        else:
+            print('None')
+            # for i in range(self.tableWidget.rowCount()):
+            #     check_boxes = self.tableWidget.cellWidget(i,6).findChildren(QtWidgets.QCheckBox)
+            #     for i in check_boxes:
+            #         print(i.objectName(),i.checkState())
         length = self.tableWidget.rowCount()
         curstate = bitarray.bitarray(length)
         curstate.setall(False)
         for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.item(i, 5).checkState():
+            if self.tableWidget.item(i, 0).checkState():
                 curstate[i] = 1
         if bitarray.bitdiff(curstate, self.laststate):
             self.laststate = curstate
@@ -116,41 +156,43 @@ class Ui_Dialog(object):
         return millisecond+1000*second+60000*minute
 
     def plotTimeGraph(self):
-        # TODO: Can still be optimized
         try:
             self.laptimefig.clear()
             ax = self.laptimefig.add_subplot(111)
             ax.cla()
             ax.grid()
             legends = []
-            length = len(self.drivers)
-            for i in range(length):
-                if self.laststate[i]:
-                    driver = self.drivers[i]
+            for i in self.plot_list:
 
-                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
-                    pitlaps = []
-                    pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
-                    if len(pitdata):
-                        for i in pitdata:
-                            pitlaps.append(i['lap'])
-                            pitlaps.append(i['lap']+1)
-                    plot_pool_x = []
-                    plot_pool_y = []
-                    for k in timing:
-                        if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
-                            if k['lap'] not in pitlaps:
+                string = i.split('-')
+                row_num = string[0]
+                col_num = string[1]
+                check_num = string[2]
+                # TODO:Finish Database
+                # start_lap =
+                timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                pitlaps = []
+                pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+                if len(pitdata):
+                    for i in pitdata:
+                        pitlaps.append(i['lap'])
+                        pitlaps.append(i['lap']+1)
+                plot_pool_x = []
+                plot_pool_y = []
+                for k in timing:
+                    if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
+                        if k['lap'] not in pitlaps:
+                            time = self.mssmmm2ms(k['time'])
+                            plot_pool_x.append(k['lap'])
+                            plot_pool_y.append(time)
+                        else:
+                            if not self.hide_pit_eelap:
                                 time = self.mssmmm2ms(k['time'])
                                 plot_pool_x.append(k['lap'])
                                 plot_pool_y.append(time)
-                            else:
-                                if not self.hide_pit_eelap:
-                                    time = self.mssmmm2ms(k['time'])
-                                    plot_pool_x.append(k['lap'])
-                                    plot_pool_y.append(time)
-                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
-                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                    legends.append(name)
+                name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                legends.append(name)
             self.laptimefig.legend(legends,loc=1)
             self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                     bottom=0.13, top=0.91)
@@ -262,6 +304,19 @@ class Ui_Dialog(object):
         self.plotGapGraph()
         self.plotSpaceGapGraph()
 
+    def tyreClicked(self):
+        print('-'*20)
+        plot_list = []
+        for i in self.checkbox:
+            # print(i.objectName())
+            if i.checkState():
+                print(i.objectName(),i.checkState())
+                plot_list.append(i.objectName())
+        self.plot_list = plot_list
+        self.plotAll()
+        print('-'*20)
+
+
     def initTable(self, drivers, raceId):
         self.tableWidget.setColumnCount(6)
         self.laststate = bitarray.bitarray(len(drivers))
@@ -270,24 +325,30 @@ class Ui_Dialog(object):
         self.raceId = raceId
         self.laststate.setall(False)
         self.lastplotedstate.setall(False)
-        self.tableWidget.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget.verticalHeader().setVisible(False)
+        self.tableWidget.horizontalHeader().setStretchLastSection(False)
         self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
         # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'Result', 'Pitstops', 'Checked'])
+        # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
+        self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'End', 'Pits','Tyre'])
         self.tableWidget.setRowCount(len(drivers))
         rowcount = 0
         # self.pitstops = self.db.getPitstopsByRaceId(raceId)
 
         for num in range(len(drivers)):
             i = drivers[num]
+            # table_color = QtGui.QPalette()
+            # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
             pitstops = self.db.getPitstopByRaceIdDriverId(raceId,i['driverId'])
             pitstop_counts = len(pitstops)
             font = QtGui.QFont()
-            color = QtGui.QColor(255, 255, 255)
+            color = QtGui.QColor(192, 192, 192,128)
             finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
             finish_pos = finish_pos_raw[0]['position']
             start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId,i['driverId'])
@@ -300,12 +361,12 @@ class Ui_Dialog(object):
             driver_detail = self.db.getDriversByDriverID(i['driverId'])
             check = QtWidgets.QTableWidgetItem()
             check.setCheckState(QtCore.Qt.Unchecked)
-
+            check.setBackground(color)
             if finish_pos is not None:
                 if finish_pos == 1:
                     color = QtGui.QColor(255, 215, 0, 128)
                 elif finish_pos == 2:
-                    color = QtGui.QColor(192, 192, 192, 128)
+                    color = QtGui.QColor(128, 128, 128, 128)
                 elif finish_pos == 3:
                     color = QtGui.QColor(198, 145, 69, 128)
                 elif 4 <= finish_pos <= 10:
@@ -318,6 +379,8 @@ class Ui_Dialog(object):
             item0 = QtWidgets.QTableWidgetItem(str(driver_detail[0]['code']))
             item0.setFont(font)
             item0.setBackground(color)
+
+            check.setBackground(color)
             if finish_pos is None:
                 item0.setForeground(QtGui.QColor(255, 255, 255))
             item0.setFlags(
@@ -395,8 +458,45 @@ class Ui_Dialog(object):
                 pitstops.setForeground(QtGui.QColor(255, 255, 255))
             self.tableWidget.setItem(rowcount, 4, pitstops)
 
-            self.tableWidget.setItem(rowcount, 5, check)
+            list_height = 20
+            tyre_stints = [{'lap_on':1,'laps':1,'tyre':0},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':20,'laps':32,'tyre':4},{'lap_on':52,'laps':54,'tyre':6},{'lap_on':106,'laps':60,'tyre':8}]
+            layout_tyres = QtWidgets.QHBoxLayout()
+            pal = QtGui.QPalette()
+            pal.setColor(QtGui.QPalette.Base, color)
+            check_count = 0
+            for i in tyre_stints:
+                label_stint = QtWidgets.QLabel()
+                label_stint.setPixmap(self.tyre_img[i['tyre']].scaled(list_height,list_height))
+                label_stint.setAutoFillBackground(True)
+                laps_stint = QtWidgets.QLabel()
+                laps_stint.setText(str(i['laps']))
+                stint_1 = QtWidgets.QCheckBox()
+                # stint_1.setFixedHeight(list_height)
+                stint_1.setCheckState(QtCore.Qt.Unchecked)
+                stint_1.setObjectName(str(rowcount)+'-'+str(5)+'-'+str(check_count))
+                self.checkbox.append(stint_1)
+                # print(self.checkbox)
+                check_count += 1
+                check_color = QtGui.QPalette()
+                check_color.setColor(QtGui.QPalette.Base,QtGui.QColor(255,255,255))
+                stint_1.setPalette(check_color)
+                layout_tyres.addWidget(label_stint)
+                layout_tyres.addWidget(laps_stint)
+                layout_tyres.addWidget(stint_1)
+            cellWidget = QtWidgets.QWidget()
+            cellWidget.setLayout(layout_tyres)
+            cellWidget.setAutoFillBackground(True)
+            cellWidget.setPalette(pal)
+            self.tableWidget.setCellWidget(rowcount, 5, cellWidget)
+            # self.tableWidget.setItem(rowcount, 0, check)
+            self.tableWidget.resizeRowToContents(rowcount)
             rowcount += 1
+        self.connection()
+
+
+    def connection(self):
+        for i in self.checkbox:
+            i.clicked.connect(self.tyreClicked)
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -551,7 +651,8 @@ class Ui_Dialog(object):
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
-        self.tableWidget.clicked.connect(self.showPos)
+        # self.tableWidget.clicked.connect(self.showPos)
+
         self.SpinBox.valueChanged.connect(self.changeStartLap)
         self.SpinBox_2.valueChanged.connect(self.changeEndLap)
         self.checkBox.clicked.connect(self.hidePitChecked)
@@ -560,10 +661,11 @@ class Ui_Dialog(object):
         self.SpinBox.setEnabled(False)
         self.SpinBox_2.setEnabled(False)
         self.pushButton.click()
+        # self.connection()
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.5.5"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.0 alpha 0"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
