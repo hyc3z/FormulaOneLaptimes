@@ -33,17 +33,17 @@ class Ui_Dialog(object):
         self.inter_used_img = QtGui.QPixmap('Imgs/inter_used.PNG')
         self.wet_img = QtGui.QPixmap('Imgs/wet.PNG')
         self.wet_used_img = QtGui.QPixmap('Imgs/wet_used.PNG')
-        self.tyre_img = []
-        self.tyre_img.append(self.hard_img)
-        self.tyre_img.append(self.hard_used_img)
-        self.tyre_img.append(self.inter_img)
-        self.tyre_img.append(self.inter_used_img)
-        self.tyre_img.append(self.medium_img)
-        self.tyre_img.append(self.medium_used_img)
-        self.tyre_img.append(self.soft_img)
-        self.tyre_img.append(self.soft_used_img)
-        self.tyre_img.append(self.wet_img)
-        self.tyre_img.append(self.wet_used_img)
+        self.tyre_img = {}
+        self.tyre_img['hard'] = (self.hard_img)
+        self.tyre_img['hard_used'] = (self.hard_used_img)
+        self.tyre_img['inter'] = (self.inter_img)
+        self.tyre_img['inter_used'] = (self.inter_used_img)
+        self.tyre_img['medium'] = (self.medium_img)
+        self.tyre_img['medium_used'] = (self.medium_used_img)
+        self.tyre_img['soft'] = (self.soft_img)
+        self.tyre_img['soft_used'] = (self.soft_used_img)
+        self.tyre_img['wet'] = (self.wet_img)
+        self.tyre_img['wet_used'] = (self.wet_used_img)
         self.plot_list = []
 
 
@@ -459,18 +459,23 @@ class Ui_Dialog(object):
             self.tableWidget.setItem(rowcount, 4, pitstops)
 
             list_height = 20
-            tyre_stints = [{'lap_on':1,'laps':1,'tyre':0},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':20,'laps':32,'tyre':4},{'lap_on':52,'laps':54,'tyre':6},{'lap_on':106,'laps':60,'tyre':8}]
+            # tyre_stints = [{'lap_on':1,'laps':1,'tyre':0},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':20,'laps':32,'tyre':4},{'lap_on':52,'laps':54,'tyre':6},{'lap_on':106,'laps':60,'tyre':8}]
+            tyre_stints = self.db.getTyreStintsByRaceIdDriverId(raceId, i['driverId'])
             layout_tyres = QtWidgets.QHBoxLayout()
+            layout_tyres.setAlignment(QtCore.Qt.AlignLeft)
             pal = QtGui.QPalette()
             pal.setColor(QtGui.QPalette.Base, color)
             check_count = 0
             for i in tyre_stints:
                 label_stint = QtWidgets.QLabel()
-                label_stint.setPixmap(self.tyre_img[i['tyre']].scaled(list_height,list_height))
+                label_stint.setFixedWidth(20)
+                label_stint.setPixmap(self.tyre_img[i['tyreName']].scaled(list_height,list_height))
                 label_stint.setAutoFillBackground(True)
                 laps_stint = QtWidgets.QLabel()
+                laps_stint.setFixedWidth(17)
                 laps_stint.setText(str(i['laps']))
                 stint_1 = QtWidgets.QCheckBox()
+                stint_1.setFixedWidth(30)
                 # stint_1.setFixedHeight(list_height)
                 stint_1.setCheckState(QtCore.Qt.Unchecked)
                 stint_1.setObjectName(str(rowcount)+'-'+str(5)+'-'+str(check_count))
@@ -480,9 +485,9 @@ class Ui_Dialog(object):
                 check_color = QtGui.QPalette()
                 check_color.setColor(QtGui.QPalette.Base,QtGui.QColor(255,255,255))
                 stint_1.setPalette(check_color)
-                layout_tyres.addWidget(label_stint)
-                layout_tyres.addWidget(laps_stint)
-                layout_tyres.addWidget(stint_1)
+                layout_tyres.addWidget(label_stint, QtCore.Qt.AlignLeft)
+                layout_tyres.addWidget(laps_stint, QtCore.Qt.AlignLeft)
+                layout_tyres.addWidget(stint_1, QtCore.Qt.AlignLeft)
             cellWidget = QtWidgets.QWidget()
             cellWidget.setLayout(layout_tyres)
             cellWidget.setAutoFillBackground(True)
@@ -665,7 +670,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.0 alpha 0"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.0 alpha 1"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
