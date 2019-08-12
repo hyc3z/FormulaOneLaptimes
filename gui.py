@@ -72,7 +72,6 @@ class Ui_Dialog(object):
         self.plotGapGraph()
         # pass
 
-
     def hidePitChecked(self):
         boolean = self.checkBox.checkState()
         self.hide_pit_eelap = bool(boolean)
@@ -148,75 +147,63 @@ class Ui_Dialog(object):
             millisecond = 0
         return millisecond+1000*second+60000*minute
 
-    # def plotTimeGraph(self):
-    #     try:
-    #         self.laptimefig.clear()
-    #         ax = self.laptimefig.add_subplot(111)
-    #         ax.cla()
-    #         ax.grid()
-    #         legends = []
-    #         for i in self.plot_list:
-    #
-    #             string = i.split('-')
-    #             row_num = string[0]
-    #             col_num = string[1]
-    #             check_num = string[2]
-    #             # TODO:Finish Database
-    #             # start_lap =
-    #             timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
-    #             pitlaps = []
-    #             pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
-    #             if len(pitdata):
-    #                 for i in pitdata:
-    #                     pitlaps.append(i['lap'])
-    #                     pitlaps.append(i['lap']+1)
-    #             plot_pool_x = []
-    #             plot_pool_y = []
-    #             for k in timing:
-    #                 if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
-    #                     if k['lap'] not in pitlaps:
-    #                         time = self.mssmmm2ms(k['time'])
-    #                         plot_pool_x.append(k['lap'])
-    #                         plot_pool_y.append(time)
-    #                     else:
-    #                         if not self.hide_pit_eelap:
-    #                             time = self.mssmmm2ms(k['time'])
-    #                             plot_pool_x.append(k['lap'])
-    #                             plot_pool_y.append(time)
-    #             name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
-    #             ax.plot(plot_pool_x, plot_pool_y, marker=',')
-    #             legends.append(name)
-    #         self.laptimefig.legend(legends,loc=1)
-    #         self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-    #                 bottom=0.13, top=0.91)
-    #         ax.set_xlabel('laps')
-    #         ax.set_ylabel('Laptime: ms',labelpad = 0.5)
-    #         self.canvas.draw()  #
-    #     except Exception as e:
-    #         print(e)
     def plotTimeGraph(self):
         # TODO: Can still be optimized
-        try:
+        # try:
             self.laptimefig.clear()
             ax = self.laptimefig.add_subplot(111)
             ax.cla()
             ax.grid()
             legends = []
             length = len(self.drivers)
-            for i in range(length):
-                if self.laststate[i]:
-                    driver = self.drivers[i]
+            if self.status == 'lap':
+                for i in range(length):
+                    if self.laststate[i]:
+                        driver = self.drivers[i]
 
-                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                        timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                        pitlaps = []
+                        pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+                        if len(pitdata):
+                            for i in pitdata:
+                                pitlaps.append(i['lap'])
+                                pitlaps.append(i['lap']+1)
+                        plot_pool_x = []
+                        plot_pool_y = []
+                        for k in timing:
+                            if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
+                                if k['lap'] not in pitlaps:
+                                    time = self.mssmmm2ms(k['time'])
+                                    plot_pool_x.append(k['lap'])
+                                    plot_pool_y.append(time)
+                                else:
+                                    if not self.hide_pit_eelap:
+                                        time = self.mssmmm2ms(k['time'])
+                                        plot_pool_x.append(k['lap'])
+                                        plot_pool_y.append(time)
+                        name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                        ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                        legends.append(name)
+                self.laptimefig.legend(legends,loc=1)
+                self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                        bottom=0.13, top=0.91)
+                ax.set_xlabel('laps')
+                ax.set_ylabel('Laptime: ms',labelpad = 0.5)
+                self.canvas.draw()  #
+            elif self.status == 'stint':
+                for i in self.plot_list:
+                    driver = self.drivers[int(i[0])]
+                    stint = self.db.getTyreStintByRaceIdDriverIdStintNum(self.raceId, driver['driverId'],int(i[2])+1)
+                    timing_data = self.db.getLaptimesViaDriverIDRaceIDStartlapLaps(driver['driverId'], self.raceId, stint[0]['lap_on'], stint[0]['laps'])
                     pitlaps = []
                     pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
                     if len(pitdata):
-                        for i in pitdata:
-                            pitlaps.append(i['lap'])
-                            pitlaps.append(i['lap']+1)
+                        for p in pitdata:
+                            pitlaps.append(p['lap'])
+                            pitlaps.append(p['lap'] + 1)
                     plot_pool_x = []
                     plot_pool_y = []
-                    for k in timing:
+                    for k in timing_data:
                         if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
                             if k['lap'] not in pitlaps:
                                 time = self.mssmmm2ms(k['time'])
@@ -227,17 +214,18 @@ class Ui_Dialog(object):
                                     time = self.mssmmm2ms(k['time'])
                                     plot_pool_x.append(k['lap'])
                                     plot_pool_y.append(time)
-                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']+ ',stint '+str(int(i[2])+1)
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(name)
-            self.laptimefig.legend(legends,loc=1)
-            self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-                    bottom=0.13, top=0.91)
-            ax.set_xlabel('laps')
-            ax.set_ylabel('Laptime: ms',labelpad = 0.5)
-            self.canvas.draw()  #
-        except Exception as e:
-            print(e)
+                self.laptimefig.legend(legends, loc=1)
+                self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                                bottom=0.13, top=0.91)
+                ax.set_xlabel('laps')
+                ax.set_ylabel('Laptime: ms', labelpad=0.5)
+                self.canvas.draw()  #
+
+        # except Exception as e:
+        #     print(e)
 
 
     def plotSpaceGapGraph(self):
@@ -250,40 +238,43 @@ class Ui_Dialog(object):
         length = len(self.drivers)
         timing_pools = []
         driver_pools = []
-        for i in range(length):
-            if self.laststate[i]:
-                driver = self.drivers[i]
-                timing_accum = self.db.getLaptimesAccumViaRaceIdDriverId(self.raceId, driver['driverId'])
-                # print(timing_accum)
-                timing_pools.append(timing_accum)
-                driver_pools.append(driver)
+        if self.status == 'lap':
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
+                    timing_accum = self.db.getLaptimesAccumViaRaceIdDriverId(self.raceId, driver['driverId'])
+                    # print(timing_accum)
+                    timing_pools.append(timing_accum)
+                    driver_pools.append(driver)
 
-        for i in range(len(timing_pools)):
-            for j in range(i + 1, len(timing_pools)):
-                plot_pool_x = []
-                plot_pool_y = []
-                for k in range(len(timing_pools[i])):
-                    if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
-                        try:
-                            time0 = timing_pools[i][k]['timeElapsed']
-                            time1 = timing_pools[j][k]['timeElapsed']
-                            delta_time = time0 - time1
-                            plot_pool_x.append(timing_pools[i][k]['lap'])
-                            plot_pool_y.append(delta_time)
-                        except IndexError:
-                            pass
-                name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
-                name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
-                ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                legends.append(name0 + ' and ' + name1)
-        self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-                                        bottom=0.13, top=0.91)
-        ax.set_xlabel('laps')
-        ax.set_ylabel('Gap: ms', labelpad=0.5)
-        self.spacegapfig.legend(legends, loc=1)
-        self.canvas_3.draw()  #
-        # except Exception as e:
-        #     print(e)
+            for i in range(len(timing_pools)):
+                for j in range(i + 1, len(timing_pools)):
+                    plot_pool_x = []
+                    plot_pool_y = []
+                    for k in range(len(timing_pools[i])):
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                            try:
+                                time0 = timing_pools[i][k]['timeElapsed']
+                                time1 = timing_pools[j][k]['timeElapsed']
+                                delta_time = time0 - time1
+                                plot_pool_x.append(timing_pools[i][k]['lap'])
+                                plot_pool_y.append(delta_time)
+                            except IndexError:
+                                pass
+                    name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
+                    name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
+                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    legends.append(name0 + ' and ' + name1)
+            self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                            bottom=0.13, top=0.91)
+            ax.set_xlabel('laps')
+            ax.set_ylabel('Gap: ms', labelpad=0.5)
+            self.spacegapfig.legend(legends, loc=1)
+            self.canvas_3.draw()  #
+            # except Exception as e:
+            #     print(e)
+        elif self.status == 'stint':
+            pass
 
     def plotGapGraph(self):
         # try:
@@ -295,38 +286,41 @@ class Ui_Dialog(object):
         length = len(self.drivers)
         timing_pools = []
         driver_pools = []
-        for i in range(length):
-            if self.laststate[i]:
-                driver = self.drivers[i]
-                timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
-                timing_pools.append(timing)
-                driver_pools.append(driver)
-        for i in range(len(timing_pools)):
-            for j in range(i+1, len(timing_pools)):
-                plot_pool_x = []
-                plot_pool_y = []
-                for k in range(len(timing_pools[i])):
-                    if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
-                        try:
-                            time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
-                            time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
-                            delta_time = time0-time1
-                            plot_pool_x.append(timing_pools[i][k]['lap'])
-                            plot_pool_y.append(delta_time)
-                        except IndexError:
-                            pass
-                name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
-                name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
-                ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                legends.append(name0+' and '+name1)
-        self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-                                         bottom=0.13, top=0.91)
-        ax.set_xlabel('laps')
-        ax.set_ylabel('Speed Difference: ms', labelpad=0.5)
-        self.speedgapfig.legend(legends, loc=1)
-        self.canvas_2.draw()  #
-        # except Exception as e:
-        #     print(e)
+        if self.status == 'lap':
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
+                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    timing_pools.append(timing)
+                    driver_pools.append(driver)
+            for i in range(len(timing_pools)):
+                for j in range(i+1, len(timing_pools)):
+                    plot_pool_x = []
+                    plot_pool_y = []
+                    for k in range(len(timing_pools[i])):
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                            try:
+                                time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
+                                time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
+                                delta_time = time0-time1
+                                plot_pool_x.append(timing_pools[i][k]['lap'])
+                                plot_pool_y.append(delta_time)
+                            except IndexError:
+                                pass
+                    name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
+                    name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
+                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    legends.append(name0+' and '+name1)
+            self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                             bottom=0.13, top=0.91)
+            ax.set_xlabel('laps')
+            ax.set_ylabel('Speed Difference: ms', labelpad=0.5)
+            self.speedgapfig.legend(legends, loc=1)
+            self.canvas_2.draw()  #
+            # except Exception as e:
+            #     print(e)
+        elif self.status == 'stint':
+            pass
 
     def changeStartLap(self):
         cur_lap = self.SpinBox.value()
@@ -343,21 +337,21 @@ class Ui_Dialog(object):
         self.plotSpaceGapGraph()
 
     def tyreClicked(self):
-        print('-'*20)
         plot_list = []
         for i in self.checkbox:
             # print(i.objectName())
             if i.checkState():
-                print(i.objectName(),i.checkState())
-                plot_list.append(i.objectName())
+                string = i.objectName().split('-')
+                plot_list.append(string)
         self.plot_list = plot_list
         self.plotAll()
-        print('-'*20)
 
 
     def initTable(self, drivers, raceId):
         stint_data = self.db.getTyreStintByRaceId(raceId)
         if len(stint_data):
+            self.status = 'stint'
+            self.tableWidget.clearContents()
             self.tableWidget.setColumnCount(6)
             self.laststate = bitarray.bitarray(len(drivers))
             self.lastplotedstate = bitarray.bitarray(len(drivers))
@@ -538,6 +532,7 @@ class Ui_Dialog(object):
                 rowcount += 1
             self.connection()
         else:
+            self.status = 'lap'
             self.tableWidget.clearContents()
             self.tableWidget.setColumnCount(6)
             self.laststate = bitarray.bitarray(len(drivers))

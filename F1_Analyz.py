@@ -179,6 +179,10 @@ class f1db:
         self.cur.execute('select * from stints where raceId='+str(raceId)+' and driverId='+str(driverId))
         return self.cur.fetchall()
 
+    def getTyreStintByRaceIdDriverIdStintNum(self,raceId,driverId, stint):
+        self.cur.execute('select * from stints where raceId='+str(raceId)+' and driverId='+str(driverId)+' and stint='+str(stint))
+        return self.cur.fetchall()
+
     def getTyreStintByRaceId(self, raceId):
         self.cur.execute('select * from stints where raceId='+str(raceId))
         return self.cur.fetchall()
@@ -199,6 +203,11 @@ class f1db:
 
     def getLaptimesViaDriverIDRaceID(self, driverId, raceId):
         self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId))
+        return self.cur.fetchall()
+
+    def getLaptimesViaDriverIDRaceIDStartlapLaps(self, driverId, raceId, lap_on, laps):
+        lap_finish = lap_on+laps
+        self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId)+' and lap>='+str(lap_on)+' and lap<='+str(lap_finish))
         return self.cur.fetchall()
 
     def getMaximumLap(self,raceId):
