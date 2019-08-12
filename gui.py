@@ -472,7 +472,7 @@ class Ui_Dialog(object):
                 label_stint.setPixmap(self.tyre_img[i['tyreName']].scaled(list_height,list_height))
                 label_stint.setAutoFillBackground(True)
                 laps_stint = QtWidgets.QLabel()
-                laps_stint.setFixedWidth(17)
+                laps_stint.setFixedWidth(18)
                 laps_stint.setText(str(i['laps']))
                 stint_1 = QtWidgets.QCheckBox()
                 stint_1.setFixedWidth(30)
