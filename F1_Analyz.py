@@ -205,6 +205,31 @@ class f1db:
         self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId))
         return self.cur.fetchall()
 
+    def getLaptimesViaDriverIDRaceIDStints(self, driverId, raceId, stints):
+        string0 = '(raceId='+str(raceId)+' and driverId='+str(driverId)+' and stint='
+        string = 'select * from stints where '
+        for i in stints:
+            if i is stints[0]:
+                string += string0
+                string += str(int(i)+1)
+                string += ')'
+            else:
+                string += ' or '
+                string += string0
+                string += str(int(i)+1)
+                string += ')'
+        data = self.cur.execute(string).fetchall()
+        # for i in data
+        result = {}
+        for i in data:
+            data2 = self.getLaptimesViaDriverIDRaceIDStartlapLaps(driverId, raceId, i['lap_on'], i['laps'])
+            for j in data2:
+                result[j['lap']] = j['time']
+        return result
+
+        # self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId)+' and ')
+        # return self.cur.fetchall()
+
     def getLaptimesViaDriverIDRaceIDStartlapLaps(self, driverId, raceId, lap_on, laps):
         lap_finish = lap_on+laps
         self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId)+' and lap>='+str(lap_on)+' and lap<='+str(lap_finish))
