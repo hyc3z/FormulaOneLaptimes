@@ -94,10 +94,14 @@ class Ui_Dialog(object):
         for i in races:
             self.comboBox_2.addItem(i['name'])
 
+    def unlockPushbutton(self):
+        self.pushButton.setEnabled(True)
+
     def getDriversInThisRace(self):
         # self.canvas_2.clear()
         # self.spacegapfig.clear()
         # self.speedgapfig.clear()
+        self.pushButton.setEnabled(False)
         self.checkbox = []
         year = self.comboBox.currentText()
         race_name = self.comboBox_2.currentText()
@@ -970,6 +974,8 @@ class Ui_Dialog(object):
         
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
+        self.comboBox.currentIndexChanged.connect(self.unlockPushbutton)
+        self.comboBox_2.currentIndexChanged.connect(self.unlockPushbutton)
         self.pushButton.clicked.connect(self.getDriversInThisRace)
         self.tableWidget.clicked.connect(self.showPos)
 
