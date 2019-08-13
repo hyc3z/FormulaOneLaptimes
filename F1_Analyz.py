@@ -227,6 +227,27 @@ class f1db:
                 result[j['lap']] = j['time']
         return result
 
+    def getLaptimesAccumViaDriverIDRaceIDStints(self, driverId, raceId, stints):
+        string0 = '(raceId=' + str(raceId) + ' and driverId=' + str(driverId) + ' and stint='
+        string = 'select * from stints where '
+        for i in stints:
+            if i is stints[0]:
+                string += string0
+                string += str(int(i) + 1)
+                string += ')'
+            else:
+                string += ' or '
+                string += string0
+                string += str(int(i) + 1)
+                string += ')'
+        data = self.cur.execute(string).fetchall()
+        result = {}
+        for i in data:
+            for j in range(i['lap_on'],i['lap_on']+i['laps']+1):
+                accum = self.cur.execute('select driverId,raceId,lap, (select sum(milliseconds) from lapTimes where lap<=tt.lap and raceId = tt.raceId and driverId = tt.driverId) as timeElapsed from lapTimes as tt where driverId='+str(driverId)+' and raceId='+str(raceId)+' and lap='+str(j))
+                for acc in accum:
+                    result[acc['lap']]=acc['timeElapsed']
+        return result
         # self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId)+' and ')
         # return self.cur.fetchall()
 
