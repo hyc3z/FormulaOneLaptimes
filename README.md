@@ -15,9 +15,18 @@ Requirements
 `$ pip3 install pyqt5 requests matplotlib bitarray`
 
 You may set up a native MySQL environment, and create the needed database via the .sql file provided by ergast.com , but since it is no easy job, I've used the [mysql2sqlite](https://github.com/dumblob/mysql2sqlite) to generate a sqlite db, and you may download the db that comes with 0.2.1 version
-[here](https://github.com/Hycdog/F1_Analyz/releases/download/0.2.1/f1.db).
+[here](https://github.com/Hycdog/F1_Analyz/releases/download/v0.5.5/f1.db).
 
 Currently some data in 1996 is not available.
+
+
+Changes made to the database:
+
+    
+    Aug 12 2019:
+
+    Add missing pitstop for car 44 in race 1020
+    Add table stint
 
 After installing the requirements, and having a f1.db file under project directory, you may run
 
@@ -25,10 +34,10 @@ After installing the requirements, and having a f1.db file under project directo
    
 to start the software.
 
-Current version: 0.3.1 
+Current version: 0.6.1 
 
 The project is in a very early stage, and a lot of features and algorithms are needed. Please join in the project if you're also a F1 lover, and just want to dig a little deeper. We need your help!
 
-![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-10%2009-12-55.png)
+![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-13%2008-59-31.png)
 
  
