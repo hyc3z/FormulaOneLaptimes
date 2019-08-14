@@ -8,7 +8,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from F1_Analyz import f1db
+from database_connector import f1db
 import bitarray
 import matplotlib.pyplot as plt
 import time
@@ -231,7 +231,7 @@ class Ui_Dialog(object):
                     if i not in self.laptime.keys():
                         self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
                     else:
-                        self.laptime[i].update(self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i]))
+                        self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
                     if i not in self.name.keys():
                         self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
                 # plot_pool_x = []
@@ -349,7 +349,7 @@ class Ui_Dialog(object):
                 if i not in self.acctime.keys():
                     self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i])
                 else:
-                    self.acctime[i].update(self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i]))
+                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i])
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
             # plot_pool_x = []
@@ -464,7 +464,7 @@ class Ui_Dialog(object):
                 if i not in self.laptime.keys():
                     self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
                 else:
-                    self.laptime[i].update(self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i]))
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
 

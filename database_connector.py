@@ -22,7 +22,7 @@ class f1db:
             d[col[0]] = row[index]
         return d
 
-    def __init__(self,dbtype='sqlite3', host='localhost', port=3306, db='f1', user='root', passwd='aqwe6kj3', charset='utf8'):
+    def __init__(self,dbtype='sqlite3', host='localhost', port=3306, db='f1', user='root', passwd='aqwe6kj3', charset='utf8', db_path='f1.db'):
         # 建立连接
         if dbtype == 'mysql':
             self.passwd = passwd
@@ -34,7 +34,7 @@ class f1db:
             # 创建游标，操作设置为字典类型
             self.cur = self.conn.cursor(cursor=pymysql.cursors.DictCursor)
         elif dbtype == 'sqlite3':
-            self.conn = sqlite3.connect(os.path.join(os.getcwd(), 'f1.db'))
+            self.conn = sqlite3.connect(db_path)
             self.conn.row_factory = self.dict_factory
             self.cur = self.conn.cursor()
         # self.init_all_data()
