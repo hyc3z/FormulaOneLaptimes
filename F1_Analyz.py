@@ -224,7 +224,7 @@ class f1db:
         for i in data:
             data2 = self.getLaptimesViaDriverIDRaceIDStartlapLaps(driverId, raceId, i['lap_on'], i['laps'])
             for j in data2:
-                result[j['lap']] = j['time']
+                result[j['lap']] = j['milliseconds']
         return result
 
     def getLaptimesAccumViaDriverIDRaceIDStints(self, driverId, raceId, stints):
@@ -253,7 +253,7 @@ class f1db:
 
     def getLaptimesViaDriverIDRaceIDStartlapLaps(self, driverId, raceId, lap_on, laps):
         lap_finish = lap_on+laps
-        self.cur.execute('select time,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId)+' and lap>='+str(lap_on)+' and lap<='+str(lap_finish))
+        self.cur.execute('select milliseconds,lap from lapTimes where raceId='+str(raceId)+' and driverId='+str(driverId)+' and lap>='+str(lap_on)+' and lap<='+str(lap_finish))
         return self.cur.fetchall()
 
     def getMaximumLap(self,raceId):

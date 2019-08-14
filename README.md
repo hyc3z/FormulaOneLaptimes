@@ -50,15 +50,7 @@ current performance:
     Total: 1.4928858280181885
 
     v0.6.2
-    Time Graph: 0.0940854549407959
-    Space Graph: 0.7196543216705322
-    Time Gap Graph: 0.6045498847961426
-    Total: 1.4182896614074707
-    
-    v0.6.3
-    Time Graph: 0.09308457374572754
-    Space Graph: 0.5965425968170166
-    Time Gap Graph: 0.5565061569213867
-    Total: 1.2461333274841309
-    
-    
+    Time Graph: 0.09108233451843262
+    Space Graph: 0.5905370712280273
+    Time Gap Graph: 0.5525028705596924
+    Total: 1.2341222763061523
