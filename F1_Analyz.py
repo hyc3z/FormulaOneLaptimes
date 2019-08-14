@@ -260,6 +260,7 @@ class f1db:
         self.cur.execute('SELECT max(lap) from lapTimes where raceId='+str(raceId))
         return self.cur.fetchall()
 
+
     def saveLapTimesCsv(self,raceID,savedir):
         csv = 'Driver'
         self.cur.execute('SELECT max(lap) from lapTimes where raceId='+str(raceID))
@@ -312,5 +313,5 @@ if __name__ == '__main__':
     db = f1db()
     # db.getLapTimes(90, 'Laptimes')
     # print(db.getResultStandingByRaceIDandDriverId(1021,1))
-    # db.createStints()
+
 

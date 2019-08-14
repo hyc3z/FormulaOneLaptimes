@@ -41,9 +41,24 @@ The project is in a very early stage, and a lot of features and algorithms are n
 ![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-13%2008-59-31.png)
 
 current performance:
-
-    20 drivers in 2019 Germany Grand Prix:
+    
+    v0.6.1
+    18 drivers in 2019 Germany Grand Prix:
     Time Graph: 0.09461402893066406
     Space Graph: 0.721656084060669
     Time Gap Graph: 0.6766157150268555
     Total: 1.4928858280181885
+
+    v0.6.2
+    Time Graph: 0.0940854549407959
+    Space Graph: 0.7196543216705322
+    Time Gap Graph: 0.6045498847961426
+    Total: 1.4182896614074707
+    
+    v0.6.3
+    Time Graph: 0.09308457374572754
+    Space Graph: 0.5965425968170166
+    Time Gap Graph: 0.5565061569213867
+    Total: 1.2461333274841309
+    
+    

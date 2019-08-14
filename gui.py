@@ -45,6 +45,8 @@ class Ui_Dialog(object):
         self.tyre_img['wet'] = (self.wet_img)
         self.tyre_img['wet_used'] = (self.wet_used_img)
         self.plot_list = []
+        self.pitdata = {}
+        self.pitlaps = {}
 
 
 
@@ -305,6 +307,8 @@ class Ui_Dialog(object):
             #     print(e)
         elif self.status == 'stint':
             a = {}
+            time = {}
+            name = {}
             for i in self.plot_list:
                 if int(i[0]) not in a.keys():
                     a[int(i[0])] = []
@@ -312,38 +316,32 @@ class Ui_Dialog(object):
                 else:
                     a[int(i[0])].append(i[2])
             for i in a.keys():
+                if i not in self.pitdata.keys():
+                    self.pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
+                    self.pitlaps[i] = []
+                for pi in self.pitdata[i]:
+                    self.pitlaps[i].append(pi['lap'])
+                    self.pitlaps[i].append(pi['lap'] + 1)
+                time[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
+                name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+            for i in a.keys():
                 for j in a.keys():
                     if i > j:
-                        pitlaps = []
-                        pitdata_i = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
-                        pitdata_j = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[j]['driverId'])
-                        if len(pitdata_i):
-                            for pi in pitdata_i:
-                                pitlaps.append(pi['lap'])
-                                pitlaps.append(pi['lap'] + 1)
-                        if len(pitdata_j):
-                            for pj in pitdata_j:
-                                pitlaps.append(pj['lap'])
-                                pitlaps.append(pj['lap'] + 1)
                         plot_pool_x = []
                         plot_pool_y = []
-                        time_i = self.db.getLaptimesAccumViaDriverIDRaceIDStints( self.drivers[i]['driverId'],self.raceId,a[i])
-                        time_j = self.db.getLaptimesAccumViaDriverIDRaceIDStints( self.drivers[j]['driverId'],self.raceId,a[j])
                         for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
-                            if lap in time_i.keys() and lap in time_j.keys():
-                                if lap not in pitlaps:
-                                    diff = time_i[lap] - time_j[lap]
+                            if lap in time[i].keys() and lap in time[j].keys():
+                                if lap not in self.pitlaps:
+                                    diff = time[i][lap] - time[j][lap]
                                     plot_pool_x.append(lap)
                                     plot_pool_y.append(diff)
                                 else:
                                     if not self.hide_pit_eelap:
-                                        diff = time_i[lap] - time_j[lap]
+                                        diff = time[i][lap] - time[j][lap]
                                         plot_pool_x.append(lap)
                                         plot_pool_y.append(diff)
-                        name0 = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
-                        name1 = self.db.getDriversByDriverID(self.drivers[j]['driverId'])[0]['surname']
                         ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        legends.append(name0 + ' and ' + name1)
+                        legends.append(name[i] + ' and ' + name[j])
             self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -361,6 +359,7 @@ class Ui_Dialog(object):
         length = len(self.drivers)
         timing_pools = []
         driver_pools = []
+        pitdata = {}
         if self.status == 'lap':
             for i in range(length):
                 if self.laststate[i]:
@@ -414,6 +413,10 @@ class Ui_Dialog(object):
             # except Exception as e:
             #     print(e)
         elif self.status == 'stint':
+            pitdata = {}
+            pitlaps = {}
+            time = {}
+            name = {}
             a = {}
             for i in self.plot_list:
                 if int(i[0]) not in a.keys():
@@ -422,38 +425,31 @@ class Ui_Dialog(object):
                 else:
                     a[int(i[0])].append(i[2])
             for i in a.keys():
+                pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
+                pitlaps[i] = []
+                for pi in pitdata[i]:
+                    pitlaps[i].append(pi['lap'])
+                    pitlaps[i].append(pi['lap'] + 1)
+                time[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
+                name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+            for i in a.keys():
                 for j in a.keys():
                     if i>j:
-                        pitlaps = []
-                        pitdata_i = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
-                        pitdata_j = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[j]['driverId'])
-                        if len(pitdata_i):
-                            for pi in pitdata_i:
-                                pitlaps.append(pi['lap'])
-                                pitlaps.append(pi['lap'] + 1)
-                        if len(pitdata_j):
-                            for pj in pitdata_j:
-                                pitlaps.append(pj['lap'])
-                                pitlaps.append(pj['lap'] + 1)
                         plot_pool_x = []
                         plot_pool_y = []
-                        time_i = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId,a[i])
-                        time_j = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[j]['driverId'],self.raceId,a[j])
                         for lap in range(self.min_cal_lap,self.max_cal_lap+1):
-                            if lap in time_i.keys() and lap in time_j.keys():
-                                if lap not in pitlaps:
-                                    diff = self.mssmmm2ms(time_i[lap]) - self.mssmmm2ms(time_j[lap])
+                            if lap in time[i].keys() and lap in time[j].keys():
+                                if lap not in pitlaps[i] and lap not in pitlaps[j]:
+                                    diff = self.mssmmm2ms(time[i][lap]) - self.mssmmm2ms(time[j][lap])
                                     plot_pool_x.append(lap)
                                     plot_pool_y.append(diff)
                                 else:
                                     if not self.hide_pit_eelap:
-                                        diff = self.mssmmm2ms(time_i[lap]) - self.mssmmm2ms(time_j[lap])
+                                        diff = self.mssmmm2ms(time[i][lap]) - self.mssmmm2ms(time[j][lap])
                                         plot_pool_x.append(lap)
                                         plot_pool_y.append(diff)
-                        name0 = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
-                        name1 = self.db.getDriversByDriverID(self.drivers[j]['driverId'])[0]['surname']
                         ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        legends.append(name0 + ' and ' + name1)
+                        legends.append(name[i] + ' and ' + name[j])
             self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -992,7 +988,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.1"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.3"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
