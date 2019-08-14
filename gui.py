@@ -174,7 +174,7 @@ class Ui_Dialog(object):
         # try:
             self.laptimefig.clear()
             ax = self.laptimefig.add_subplot(111)
-            ax.cla()
+            # ax.cla()
             ax.grid()
             legends = []
             length = len(self.drivers)
@@ -247,7 +247,8 @@ class Ui_Dialog(object):
                                     time0 = self.laptime[k][lap]
                                     plot_pool_x.append(lap)
                                     plot_pool_y.append(time0)
-                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    ax.scatter(plot_pool_x, plot_pool_y)
+                    # ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(self.name[k])
                 self.laptimefig.legend(legends, loc=1)
                 self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
@@ -264,7 +265,7 @@ class Ui_Dialog(object):
         # try:
         self.spacegapfig.clear()
         ax = self.spacegapfig.add_subplot(111)
-        ax.cla()
+        # ax.cla()
         ax.grid()
         legends = []
         length = len(self.drivers)
@@ -314,7 +315,7 @@ class Ui_Dialog(object):
                                 pass
                     name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
-                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    ax.plot(plot_pool_x, plot_pool_y)
                     legends.append(name0 + ' and ' + name1)
             self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                             bottom=0.13, top=0.91)
@@ -326,8 +327,6 @@ class Ui_Dialog(object):
             #     print(e)
         elif self.status == 'stint':
             a = {}
-            time = {}
-            name = {}
             for i in self.plot_list:
                 if int(i[0]) not in a.keys():
                     a[int(i[0])] = []
@@ -347,11 +346,11 @@ class Ui_Dialog(object):
                     self.acctime[i].update(self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i]))
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+            plot_pool_x = []
+            plot_pool_y = []
             for i in a.keys():
                 for j in a.keys():
                     if i > j:
-                        plot_pool_x = []
-                        plot_pool_y = []
                         for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                             if lap in self.acctime[i].keys() and lap in self.acctime[j].keys():
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
@@ -363,8 +362,11 @@ class Ui_Dialog(object):
                                         diff = self.acctime[i][lap] - self.acctime[j][lap]
                                         plot_pool_x.append(lap)
                                         plot_pool_y.append(diff)
-                        ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        legends.append(self.name[i] + ' and ' + self.name[j])
+                        # ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                        plot_pool_x.append(None)
+                        plot_pool_y.append(None)
+            ax.scatter(plot_pool_x, plot_pool_y)
+            legends.append(self.name[i] + ' and ' + self.name[j])
             self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -376,7 +378,7 @@ class Ui_Dialog(object):
         # try:
         self.speedgapfig.clear()
         ax = self.speedgapfig.add_subplot(111)
-        ax.cla()
+        # ax.cla()
         ax.grid()
         legends = []
         length = len(self.drivers)
@@ -426,6 +428,7 @@ class Ui_Dialog(object):
                     name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    # ax.scatter(plot_pool_x, plot_pool_y, marker=',')
                     legends.append(name0+' and '+name1)
             self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
@@ -456,11 +459,12 @@ class Ui_Dialog(object):
                     self.laptime[i].update(self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i]))
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+
+            plot_pool_x = []
+            plot_pool_y = []
             for i in a.keys():
                 for j in a.keys():
                     if i>j:
-                        plot_pool_x = []
-                        plot_pool_y = []
                         for lap in range(self.min_cal_lap,self.max_cal_lap+1):
                             if lap in self.laptime[i].keys() and lap in self.laptime[j].keys():
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
@@ -472,8 +476,11 @@ class Ui_Dialog(object):
                                         diff = self.laptime[i][lap] - self.laptime[j][lap]
                                         plot_pool_x.append(lap)
                                         plot_pool_y.append(diff)
-                        ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        legends.append(self.name[i] + ' and ' + self.name[j])
+                        # ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                        plot_pool_x.append(None)
+                        plot_pool_y.append(None)
+            ax.scatter(plot_pool_x, plot_pool_y)
+            legends.append(self.name[i] + ' and ' + self.name[j])
             self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -1013,7 +1020,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.2"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.3"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
