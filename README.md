@@ -39,24 +39,3 @@ Current version: 0.6.1
 The project is in a very early stage, and a lot of features and algorithms are needed. Please join in the project if you're also a F1 lover, and just want to dig a little deeper. We need your help!
 
 ![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-13%2008-59-31.png)
-
-current performance:
-    
-    v0.6.1
-    18 drivers in 2019 Germany Grand Prix:
-    Time Graph: 0.09461402893066406
-    Space Graph: 0.721656084060669
-    Time Gap Graph: 0.6766157150268555
-    Total: 1.4928858280181885
-
-    v0.6.2
-    Time Graph: 0.09108233451843262
-    Space Graph: 0.5905370712280273
-    Time Gap Graph: 0.5525028705596924
-    Total: 1.2341222763061523
-    
-    v0.6.4
-    Time Graph: 0.04303097724914551
-    Space Graph: 0.061055660247802734
-    Time Gap Graph: 0.05404925346374512
-    Total: 0.15813589096069336

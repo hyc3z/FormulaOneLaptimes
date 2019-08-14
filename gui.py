@@ -234,9 +234,11 @@ class Ui_Dialog(object):
                         self.laptime[i].update(self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i]))
                     if i not in self.name.keys():
                         self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
-                plot_pool_x = []
-                plot_pool_y = []
+                # plot_pool_x = []
+                # plot_pool_y = []
                 for k in a.keys():
+                    plot_pool_x = []
+                    plot_pool_y = []
                     for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                         if lap in self.laptime[k].keys():
                             if lap not in self.pitlaps[k]:
@@ -248,12 +250,13 @@ class Ui_Dialog(object):
                                     time0 = self.laptime[k][lap]
                                     plot_pool_x.append(lap)
                                     plot_pool_y.append(time0)
-                    plot_pool_x.append(None)
-                    plot_pool_y.append(None)
-                    legends.append(self.name[k])
-                ax.scatter(plot_pool_x, plot_pool_y)
-                # ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                self.laptimefig.legend(legends, loc=1)
+                    # plot_pool_x.append(None)
+                    # plot_pool_y.append(None)
+                    ax.plot(plot_pool_x, plot_pool_y, label=self.name[k])
+                # ax.scatter(plot_pool_x, plot_pool_y)
+                # ax.plot(plot_pool_x, plot_pool_y, marker=',                            ')
+                # self.laptimefig.legend(legends, loc=1)
+                self.laptimefig.legend(prop={'size':6})
                 self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                                 bottom=0.13, top=0.91)
                 ax.set_xlabel('laps')
@@ -349,11 +352,13 @@ class Ui_Dialog(object):
                     self.acctime[i].update(self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i]))
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
-            plot_pool_x = []
-            plot_pool_y = []
+            # plot_pool_x = []
+            # plot_pool_y = []
             for i in a.keys():
                 for j in a.keys():
                     if i > j:
+                        plot_pool_x = []
+                        plot_pool_y = []
                         for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                             if lap in self.acctime[i].keys() and lap in self.acctime[j].keys():
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
@@ -365,11 +370,11 @@ class Ui_Dialog(object):
                                         diff = self.acctime[i][lap] - self.acctime[j][lap]
                                         plot_pool_x.append(lap)
                                         plot_pool_y.append(diff)
-                        # ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        plot_pool_x.append(None)
-                        plot_pool_y.append(None)
-                        legends.append(self.name[i] + ' and ' + self.name[j])
-            ax.scatter(plot_pool_x, plot_pool_y)
+                        ax.plot(plot_pool_x, plot_pool_y, label=self.name[i] + ' and ' + self.name[j])
+                        # plot_pool_x.append(None)
+                        # plot_pool_y.append(None)
+            # ax.scatter(plot_pool_x, plot_pool_y)
+            self.spacegapfig.legend(prop={'size':6},ncol=4,loc=1)
             self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -463,10 +468,12 @@ class Ui_Dialog(object):
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
 
-            plot_pool_x = []
-            plot_pool_y = []
+            # plot_pool_x = []
+            # plot_pool_y = []
             for i in a.keys():
                 for j in a.keys():
+                    plot_pool_x = []
+                    plot_pool_y = []
                     if i>j:
                         for lap in range(self.min_cal_lap,self.max_cal_lap+1):
                             if lap in self.laptime[i].keys() and lap in self.laptime[j].keys():
@@ -479,11 +486,11 @@ class Ui_Dialog(object):
                                         diff = self.laptime[i][lap] - self.laptime[j][lap]
                                         plot_pool_x.append(lap)
                                         plot_pool_y.append(diff)
-                        # ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        plot_pool_x.append(None)
-                        plot_pool_y.append(None)
-                        legends.append(self.name[i] + ' and ' + self.name[j])
-            ax.scatter(plot_pool_x, plot_pool_y)
+                        ax.plot(plot_pool_x, plot_pool_y, label=self.name[i] + ' and ' + self.name[j])
+                        # plot_pool_x.append(None)
+                        # plot_pool_y.append(None)
+            # ax.plot(plot_pool_x, plot_pool_y)
+            self.speedgapfig.legend(prop={'size':6},ncol=4)
             self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -1023,7 +1030,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.4"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.5"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
