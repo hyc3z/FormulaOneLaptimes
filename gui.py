@@ -1358,7 +1358,7 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
-    ui = Ui_Dialog(plot_type='QtChart')
+    ui = Ui_Dialog(plot_type='matplotlib')
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())

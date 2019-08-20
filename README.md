@@ -34,8 +34,12 @@ After installing the requirements, and having a f1.db file under project directo
    
 to start the software.
 
-Current version: 0.6.1 
+Current version: 0.7.0 
 
 The project is in a very early stage, and a lot of features and algorithms are needed. Please join in the project if you're also a F1 lover, and just want to dig a little deeper. We need your help!
 
-![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot%20from%202019-08-13%2008-59-31.png)
+Matplotlib view:
+![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot_20190820_105513.png)
+
+QtChart view:
+![Screenshot not yet loaded](https://github.com/Hycdog/img_folder/blob/master/Screenshot_20190820_105350.png)
