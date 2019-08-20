@@ -711,6 +711,30 @@ class Ui_Dialog(object):
     def unlockPushbutton(self):
         self.pushButton.setEnabled(True)
 
+    def checkAll(self):
+        if self.checkBox_2.checkState():
+            if self.status == 'stint':
+                plot_list = []
+                for i in self.checkbox:
+                    i.setCheckState(QtCore.Qt.Checked)
+                    string = i.objectName().split('-')
+                    plot_list.append(string)
+                self.plot_list = plot_list
+            elif self.status == 'lap':
+                for i in range(self.tableWidget.rowCount()):
+                    self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.Checked)
+                self.laststate.setall(True)
+        else:
+            if self.status == 'stint':
+                for i in self.checkbox:
+                    i.setCheckState(QtCore.Qt.Unchecked)
+                self.plot_list = []
+            elif self.status == 'lap':
+                for i in range(self.tableWidget.rowCount()):
+                    self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.Unchecked)
+                self.laststate.setall(False)
+        self.plotAll()
+
     def getDriversInThisRace(self):
         # self.canvas_2.clear()
         # self.spacegapfig.clear()
@@ -1164,6 +1188,7 @@ class Ui_Dialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.spinBox.sizePolicy().hasHeightForWidth())
         self.spinBox.setSizePolicy(sizePolicy)
+        self.spinBox.setMaximumSize(QtCore.QSize(16777215, 30))
         self.spinBox.setObjectName("spinBox")
         self.gridLayout_2.addWidget(self.spinBox, 0, 1, 1, 1)
         self.spinBox_2 = QtWidgets.QSpinBox(self.layoutWidget)
@@ -1172,6 +1197,7 @@ class Ui_Dialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.spinBox_2.sizePolicy().hasHeightForWidth())
         self.spinBox_2.setSizePolicy(sizePolicy)
+        self.spinBox_2.setMaximumSize(QtCore.QSize(16777215, 30))
         self.spinBox_2.setObjectName("spinBox_2")
         self.gridLayout_2.addWidget(self.spinBox_2, 0, 3, 1, 1)
         self.label_4 = QtWidgets.QLabel(self.layoutWidget)
@@ -1218,7 +1244,6 @@ class Ui_Dialog(object):
 
         if self.plot_type == 'QtChart':
             self.chartView = QtChart.QChartView(self.tab)
-            self.chartView.setMaximumSize(QtCore.QSize(3000, 2000))
             self.chartView.setObjectName("chartView")
             self.gridLayout_tab_1.addWidget(self.chartView, 0, 0, 1, 1)
 
@@ -1239,7 +1264,6 @@ class Ui_Dialog(object):
 
         if self.plot_type == 'QtChart':
             self.chartView_2 = QtChart.QChartView(self.tab_2)
-            self.chartView_2.setGeometry(QtCore.QRect(10, 10, 359, 349))
             self.chartView_2.setObjectName("chartView_2")
             self.gridLayout_tab_2.addWidget(self.chartView_2, 0, 0, 1, 1)
 
@@ -1260,7 +1284,6 @@ class Ui_Dialog(object):
 
         if self.plot_type == 'QtChart':
             self.chartView_3 = QtChart.QChartView(self.tab_3)
-            self.chartView_3.setGeometry(QtCore.QRect(10, 10, 359, 349))
             self.chartView_3.setObjectName("chartView_3")
             self.gridLayout_tab_3.addWidget(self.chartView_3, 0, 0, 1, 1)
 
@@ -1305,14 +1328,20 @@ class Ui_Dialog(object):
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 2)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.gridLayout_4 = QtWidgets.QGridLayout()
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.label_5 = QtWidgets.QLabel(self.layoutWidget)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout_4.addWidget(self.label_5, 1, 0, 1, 1)
         self.label = QtWidgets.QLabel(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
+        self.label.setMaximumSize(QtCore.QSize(16777215, 30))
         self.label.setObjectName("label")
-        self.horizontalLayout_2.addWidget(self.label)
+        self.gridLayout_4.addWidget(self.label, 0, 0, 1, 1)
+        self.checkBox_2 = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBox_2.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.checkBox_2.setObjectName("checkBox_2")
+        self.gridLayout_4.addWidget(self.checkBox_2, 0, 1, 1, 1)
+        self.horizontalLayout_2.addLayout(self.gridLayout_4)
         self.gridLayout.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
 
         self.initialize()
@@ -1323,6 +1352,7 @@ class Ui_Dialog(object):
         self.tableWidget.clicked.connect(self.showPos)
 
         self.checkBox.clicked.connect(self.hidePitChecked)
+        self.checkBox_2.clicked.connect(self.checkAll)
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         self.spinBox.setEnabled(False)
@@ -1344,6 +1374,7 @@ class Ui_Dialog(object):
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
         self.label_4.setText(_translate("Dialog", "PitEntry/Exit"))
         self.checkBox.setText(_translate("Dialog", "Hide"))
+        self.checkBox_2.setText(_translate("Dialog", "Check All"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Dialog", "Lap Time"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Speed Gap"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "Car Gap"))
@@ -1358,7 +1389,7 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
-    ui = Ui_Dialog(plot_type='matplotlib')
+    ui = Ui_Dialog(plot_type='QtChart')
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
