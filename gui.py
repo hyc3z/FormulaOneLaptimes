@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Dialog1.ui'
+# Form implementation generated from reading ui file 'untitled.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtChart
 from database_connector import f1db
 import bitarray
 import matplotlib.pyplot as plt
@@ -15,12 +15,13 @@ import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
 
 
-
 class Ui_Dialog(object):
 
-    def __init__(self):
+    def __init__(self,plot_type='QtChart'):
+        self.plot_type = plot_type
         self.db = f1db()
-        self.checkbox  = []
+        self.checkbox = []
+        self.checkbox_legacy = []
         self.years_recorded_in_lap_times = self.db.getAllYearsRecordedInLaptimes()
         self.race_names_recorded_in_lap_times = self.db.getAllRaceNameRecordedInLaptimes()
         self.soft_img = QtGui.QPixmap('Imgs/soft.PNG')
@@ -51,9 +52,6 @@ class Ui_Dialog(object):
         self.acctime = {}
         self.name = {}
 
-
-
-
     def initData(self):
         self.plot_list = []
         self.pitdata = {}
@@ -66,7 +64,7 @@ class Ui_Dialog(object):
         self.hide_pit_eelap = False
         max_year = 0
         for i in self.years_recorded_in_lap_times:
-            if i['year']>max_year:
+            if i['year'] > max_year:
                 max_year = i['year']
             self.comboBox.addItem(str(i['year']))
         self.comboBox.setCurrentText(str(max_year))
@@ -77,195 +75,102 @@ class Ui_Dialog(object):
         latest_race = self.db.getLatestRaceThisYear(year)
         self.comboBox_2.setCurrentText(self.db.getRaceNameByRaceId(latest_race[0]['max(raceId)'])[0]['name'])
 
-
-    def plotAll(self):
-        print('-'*20)
-        t0 = time.time()
-        self.plotTimeGraph()
-        print('Time Graph:',time.time()-t0)
-        t1 = time.time()
-        self.plotSpaceGapGraph()
-        print('Space Graph:',time.time()-t1)
-        t2 = time.time()
-        self.plotGapGraph()
-        print('Time Gap Graph:',time.time()-t2)
-        print('Total:',time.time()-t0)
-        # pass
-
-    def hidePitChecked(self):
-        boolean = self.checkBox.checkState()
-        self.hide_pit_eelap = bool(boolean)
-        # print(self.hide_pit_eelap)
-        self.plotAll()
-
-
-    def getRacesInThisYear(self):
-        self.comboBox_2.clear()
-        year = self.comboBox.currentText()
-        races = self.db.getRacesInAYearRecordedInLaptimes(year)
-        for i in races:
-            self.comboBox_2.addItem(i['name'])
-
-    def unlockPushbutton(self):
-        self.pushButton.setEnabled(True)
-
-    def getDriversInThisRace(self):
-        # self.canvas_2.clear()
-        # self.spacegapfig.clear()
-        # self.speedgapfig.clear()
-        self.pushButton.setEnabled(False)
-        self.checkbox = []
-        year = self.comboBox.currentText()
-        race_name = self.comboBox_2.currentText()
-        raceId = self.db.getRaceIDByYearName(year, race_name)
-        drivers_id = self.db.getGridByRaceID(raceId[0]['raceId'])
-        # self.pitdata = self.db.getPitstopsByRaceId(raceId[0]['raceId'])
-        self.initTable(drivers_id, raceId[0]['raceId'])
-        self.max_lap = self.db.getMaximumLap(raceId[0]['raceId'])[0]['max(lap)']
-        self.max_cal_lap = self.max_lap
-        # print(self.max_lap)
-        self.min_lap = 1
-        self.min_cal_lap = self.min_lap
-        if self.max_lap is not None:
-            self.SpinBox.setMinimum(1)
-            # print(self.db.getMaximumLap(raceId[0]['raceId']))
-            self.SpinBox.setMaximum(self.max_lap)
-            self.SpinBox.setSingleStep(1)
-            self.SpinBox_2.setMinimum(1)
-            self.SpinBox_2.setMaximum(self.max_lap)
-            self.SpinBox_2.setSingleStep(1)
-            self.SpinBox_2.setValue(self.max_lap)
-            self.SpinBox_2.setEnabled(True)
-            self.SpinBox.setEnabled(True)
-        else:
-            self.SpinBox_2.setEnabled(False)
-            self.SpinBox.setEnabled(False)
-
-    def showPos(self):
-
-
-        length = self.tableWidget.rowCount()
-        curstate = bitarray.bitarray(length)
-        curstate.setall(False)
-        for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.item(i, 0).checkState():
-                curstate[i] = 1
-        if bitarray.bitdiff(curstate, self.laststate):
-            self.laststate = curstate
-            # print(self.laststate)
-            self.plotAll()
-
-
-    def mssmmm2ms(self,time):
-        minute = 0
-        if ':' in time:
-            sep = time.split(':')
-            minute = int(sep[0])
-            time = sep[1]
-        if '.' in time:
-            sep = time.split('.')
-            second = int(sep[0])
-            millisecond = int(sep[1])
-        else:
-            second = int(time)
-            millisecond = 0
-        return millisecond+1000*second+60000*minute
-
     def plotTimeGraph(self):
         # try:
-            self.laptimefig.clear()
-            ax = self.laptimefig.add_subplot(111)
-            # ax.cla()
-            ax.grid()
-            legends = []
-            length = len(self.drivers)
-            if self.status == 'lap':
-                for i in range(length):
-                    if self.laststate[i]:
-                        driver = self.drivers[i]
+        self.laptimefig.clear()
+        ax = self.laptimefig.add_subplot(111)
+        # ax.cla()
+        ax.grid()
+        legends = []
+        length = len(self.drivers)
+        if self.status == 'lap':
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
 
-                        timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
-                        pitlaps = []
-                        pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
-                        if len(pitdata):
-                            for i in pitdata:
-                                pitlaps.append(i['lap'])
-                                pitlaps.append(i['lap']+1)
-                        plot_pool_x = []
-                        plot_pool_y = []
-                        for k in timing:
-                            if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
-                                if k['lap'] not in pitlaps:
-                                    time0 = self.mssmmm2ms(k['time'])
-                                    plot_pool_x.append(k['lap'])
-                                    plot_pool_y.append(time0)
-                                else:
-                                    if not self.hide_pit_eelap:
-                                        time0 = self.mssmmm2ms(k['time'])
-                                        plot_pool_x.append(k['lap'])
-                                        plot_pool_y.append(time0)
-                        name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
-                        ax.plot(plot_pool_x, plot_pool_y, marker=',')
-                        legends.append(name)
-                self.laptimefig.legend(legends,loc=1)
-                self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-                        bottom=0.13, top=0.91)
-                ax.set_xlabel('laps')
-                ax.set_ylabel('Laptime: ms',labelpad = 0.5)
-                self.canvas.draw()  #
-            elif self.status == 'stint':
-                a = {}
-                for i in self.plot_list:
-                    if int(i[0]) not in a.keys():
-                        a[int(i[0])] = []
-                        a[int(i[0])].append(i[2])
-                    else:
-                        a[int(i[0])].append(i[2])
-                for i in a.keys():
-                    if i not in self.pitdata.keys():
-                        self.pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
-                        self.pitlaps[i] = []
-                    for pi in self.pitdata[i]:
-                        self.pitlaps[i].append(pi['lap'])
-                        self.pitlaps[i].append(pi['lap'] + 1)
-                    if i not in self.laptime.keys():
-                        self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
-                    else:
-                        self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
-                    if i not in self.name.keys():
-                        self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
-                # plot_pool_x = []
-                # plot_pool_y = []
-                for k in a.keys():
+                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    pitlaps = []
+                    pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+                    if len(pitdata):
+                        for i in pitdata:
+                            pitlaps.append(i['lap'])
+                            pitlaps.append(i['lap'] + 1)
                     plot_pool_x = []
                     plot_pool_y = []
-                    for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
-                        if lap in self.laptime[k].keys():
-                            if lap not in self.pitlaps[k]:
-                                time0 = self.laptime[k][lap]
-                                plot_pool_x.append(lap)
+                    for k in timing:
+                        if k['lap'] >= self.min_cal_lap and k['lap'] <= self.max_cal_lap:
+                            if k['lap'] not in pitlaps:
+                                time0 = self.mssmmm2ms(k['time'])
+                                plot_pool_x.append(k['lap'])
                                 plot_pool_y.append(time0)
                             else:
                                 if not self.hide_pit_eelap:
-                                    time0 = self.laptime[k][lap]
-                                    plot_pool_x.append(lap)
+                                    time0 = self.mssmmm2ms(k['time'])
+                                    plot_pool_x.append(k['lap'])
                                     plot_pool_y.append(time0)
-                    # plot_pool_x.append(None)
-                    # plot_pool_y.append(None)
-                    ax.plot(plot_pool_x, plot_pool_y, label=self.name[k])
-                # ax.scatter(plot_pool_x, plot_pool_y)
-                # ax.plot(plot_pool_x, plot_pool_y, marker=',                            ')
-                # self.laptimefig.legend(legends, loc=1)
-                self.laptimefig.legend(prop={'size':6})
-                self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-                                                bottom=0.13, top=0.91)
-                ax.set_xlabel('laps')
-                ax.set_ylabel('Laptime: ms', labelpad=0.5)
-                self.canvas.draw()  #
+                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                    ax.plot(plot_pool_x, plot_pool_y, marker=',')
+                    legends.append(name)
+            self.laptimefig.legend(legends, loc=1)
+            self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                            bottom=0.13, top=0.91)
+            ax.set_xlabel('laps')
+            ax.set_ylabel('Laptime: ms', labelpad=0.5)
+            self.canvas.draw()  #
+        elif self.status == 'stint':
+            a = {}
+            for i in self.plot_list:
+                if int(i[0]) not in a.keys():
+                    a[int(i[0])] = []
+                    a[int(i[0])].append(i[2])
+                else:
+                    a[int(i[0])].append(i[2])
+            for i in a.keys():
+                if i not in self.pitdata.keys():
+                    self.pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
+                    self.pitlaps[i] = []
+                for pi in self.pitdata[i]:
+                    self.pitlaps[i].append(pi['lap'])
+                    self.pitlaps[i].append(pi['lap'] + 1)
+                if i not in self.laptime.keys():
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId, a[i])
+                else:
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId, a[i])
+                if i not in self.name.keys():
+                    self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+            # plot_pool_x = []
+            # plot_pool_y = []
+            for k in a.keys():
+                plot_pool_x = []
+                plot_pool_y = []
+                for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
+                    if lap in self.laptime[k].keys():
+                        if lap not in self.pitlaps[k]:
+                            time0 = self.laptime[k][lap]
+                            plot_pool_x.append(lap)
+                            plot_pool_y.append(time0)
+                        else:
+                            if not self.hide_pit_eelap:
+                                time0 = self.laptime[k][lap]
+                                plot_pool_x.append(lap)
+                                plot_pool_y.append(time0)
+                # plot_pool_x.append(None)
+                # plot_pool_y.append(None)
+                ax.plot(plot_pool_x, plot_pool_y, label=self.name[k])
+            # ax.scatter(plot_pool_x, plot_pool_y)
+            # ax.plot(plot_pool_x, plot_pool_y, marker=',                            ')
+            # self.laptimefig.legend(legends, loc=1)
+            self.laptimefig.legend(prop={'size': 6})
+            self.laptimefig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
+                                            bottom=0.13, top=0.91)
+            ax.set_xlabel('laps')
+            ax.set_ylabel('Laptime: ms', labelpad=0.5)
+            self.canvas.draw()  #
 
-        # except Exception as e:
-        #     print(e)
-
+    # except Exception as e:
+    #     print(e)
 
     def plotSpaceGapGraph(self):
         # try:
@@ -324,7 +229,7 @@ class Ui_Dialog(object):
                     ax.plot(plot_pool_x, plot_pool_y)
                     legends.append(name0 + ' and ' + name1)
             self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
-                                            bottom=0.13, top=0.91)
+                                             bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
             ax.set_ylabel('Gap: ms', labelpad=0.5)
             self.spacegapfig.legend(legends, loc=1)
@@ -347,9 +252,11 @@ class Ui_Dialog(object):
                     self.pitlaps[i].append(pi['lap'])
                     self.pitlaps[i].append(pi['lap'] + 1)
                 if i not in self.acctime.keys():
-                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i])
+                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                      self.raceId, a[i])
                 else:
-                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],self.raceId, a[i])
+                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                      self.raceId, a[i])
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
             # plot_pool_x = []
@@ -374,7 +281,7 @@ class Ui_Dialog(object):
                         # plot_pool_x.append(None)
                         # plot_pool_y.append(None)
             # ax.scatter(plot_pool_x, plot_pool_y)
-            self.spacegapfig.legend(prop={'size':6},ncol=4,loc=1)
+            self.spacegapfig.legend(prop={'size': 6}, ncol=4, loc=1)
             self.spacegapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -401,7 +308,7 @@ class Ui_Dialog(object):
                     timing_pools.append(timing)
                     driver_pools.append(driver)
             for i in range(len(timing_pools)):
-                for j in range(i+1, len(timing_pools)):
+                for j in range(i + 1, len(timing_pools)):
                     plot_pool_x = []
                     plot_pool_y = []
                     pitlaps = []
@@ -421,7 +328,7 @@ class Ui_Dialog(object):
                                 if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
                                     time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
                                     time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
-                                    delta_time = time0-time1
+                                    delta_time = time0 - time1
                                     plot_pool_x.append(timing_pools[i][k]['lap'])
                                     plot_pool_y.append(delta_time)
                                 else:
@@ -437,7 +344,7 @@ class Ui_Dialog(object):
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     ax.plot(plot_pool_x, plot_pool_y, marker=',')
                     # ax.scatter(plot_pool_x, plot_pool_y, marker=',')
-                    legends.append(name0+' and '+name1)
+                    legends.append(name0 + ' and ' + name1)
             self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -462,9 +369,11 @@ class Ui_Dialog(object):
                     self.pitlaps[i].append(pi['lap'])
                     self.pitlaps[i].append(pi['lap'] + 1)
                 if i not in self.laptime.keys():
-                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId, a[i])
                 else:
-                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'], self.raceId, a[i])
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId, a[i])
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
 
@@ -474,8 +383,8 @@ class Ui_Dialog(object):
                 for j in a.keys():
                     plot_pool_x = []
                     plot_pool_y = []
-                    if i>j:
-                        for lap in range(self.min_cal_lap,self.max_cal_lap+1):
+                    if i > j:
+                        for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                             if lap in self.laptime[i].keys() and lap in self.laptime[j].keys():
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
                                     diff = self.laptime[i][lap] - self.laptime[j][lap]
@@ -490,7 +399,7 @@ class Ui_Dialog(object):
                         # plot_pool_x.append(None)
                         # plot_pool_y.append(None)
             # ax.plot(plot_pool_x, plot_pool_y)
-            self.speedgapfig.legend(prop={'size':6},ncol=4)
+            self.speedgapfig.legend(prop={'size': 6}, ncol=4)
             self.speedgapfig.subplots_adjust(left=0.18, wspace=0.25, hspace=0.25,
                                              bottom=0.13, top=0.91)
             ax.set_xlabel('laps')
@@ -498,14 +407,367 @@ class Ui_Dialog(object):
             self.speedgapfig.legend(legends, loc=1)
             self.canvas_2.draw()  #
 
+    def plotTimeGraphQChart(self):
+        c = QtChart.QChart()
+        if self.status == 'stint':
+            a = {}
+            for i in self.plot_list:
+                if int(i[0]) not in a.keys():
+                    a[int(i[0])] = []
+                    a[int(i[0])].append(i[2])
+                else:
+                    a[int(i[0])].append(i[2])
+            for i in a.keys():
+                if i not in self.pitdata.keys():
+                    self.pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
+                    self.pitlaps[i] = []
+                for pi in self.pitdata[i]:
+                    self.pitlaps[i].append(pi['lap'])
+                    self.pitlaps[i].append(pi['lap'] + 1)
+                if i not in self.laptime.keys():
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId,
+                                                                                 a[i])
+                else:
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId,
+                                                                                 a[i])
+                if i not in self.name.keys():
+                    self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+            for k in a.keys():
+                plot_pool = QtChart.QLineSeries()
+                for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
+                    if lap in self.laptime[k].keys():
+                        if lap not in self.pitlaps[k]:
+                            time0 = self.laptime[k][lap]
+                            plot_pool.append(lap, time0)
+                        else:
+                            if not self.hide_pit_eelap:
+                                time0 = self.laptime[k][lap]
+                                plot_pool.append(lap, time0)
+                plot_pool.setName(self.name[k])
+                c.addSeries(plot_pool)
+            self.chartView.setChart(c)
+        elif self.status == 'lap':
+            length = len(self.drivers)
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
+                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    pitlaps = []
+                    pitdata = self.db.getPitstopByRaceIdDriverId(self.raceId, driver['driverId'])
+                    if len(pitdata):
+                        for i in pitdata:
+                            pitlaps.append(i['lap'])
+                            pitlaps.append(i['lap'] + 1)
+                    plot_pool = QtChart.QLineSeries()
+                    for k in timing:
+                        if self.min_cal_lap <= k['lap'] <= self.max_cal_lap:
+                            if k['lap'] not in pitlaps:
+                                time0 = self.mssmmm2ms(k['time'])
+                                plot_pool.append(k['lap'], time0)
+                            else:
+                                if not self.hide_pit_eelap:
+                                    time0 = self.mssmmm2ms(k['time'])
+                                    plot_pool.append(k['lap'], time0)
+                    name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
+                    plot_pool.setName(name)
+                    c.addSeries(plot_pool)
+            self.chartView.setChart(c)
+
+    def plotSpaceGapGraphQChart(self):
+        c = QtChart.QChart()
+        if self.status == 'lap':
+            timing_pools = []
+            driver_pools = []
+            length = len(self.drivers)
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
+                    timing_accum = self.db.getLaptimesAccumViaRaceIdDriverId(self.raceId, driver['driverId'])
+                    # print(timing_accum)
+                    timing_pools.append(timing_accum)
+                    driver_pools.append(driver)
+            for i in range(len(timing_pools)):
+                for j in range(i + 1, len(timing_pools)):
+                    plot_pool = QtChart.QLineSeries()
+                    pitlaps = []
+                    pitdata_i = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[i]['driverId'])
+                    pitdata_j = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[j]['driverId'])
+                    if len(pitdata_i):
+                        for pi in pitdata_i:
+                            pitlaps.append(pi['lap'])
+                            pitlaps.append(pi['lap'] + 1)
+                    if len(pitdata_j):
+                        for pj in pitdata_j:
+                            pitlaps.append(pj['lap'])
+                            pitlaps.append(pj['lap'] + 1)
+                    for k in range(len(timing_pools[i])):
+                        if self.min_cal_lap <= timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                            try:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
+                                    time0 = timing_pools[i][k]['timeElapsed']
+                                    time1 = timing_pools[j][k]['timeElapsed']
+                                    delta_time = time0 - time1
+                                    plot_pool.append(timing_pools[i][k]['lap'], delta_time)
+                                else:
+                                    if not self.hide_pit_eelap:
+                                        time0 = timing_pools[i][k]['timeElapsed']
+                                        time1 = timing_pools[j][k]['timeElapsed']
+                                        delta_time = time0 - time1
+                                        plot_pool.append(timing_pools[i][k]['lap'], delta_time)
+                            except IndexError:
+                                pass
+                    name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
+                    name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
+                    plot_pool.setName(name0 + ' and ' + name1)
+                    c.addSeries(plot_pool)
+            # except Exception as e:
+            #     print(e)
+        elif self.status == 'stint':
+            a = {}
+            for i in self.plot_list:
+                if int(i[0]) not in a.keys():
+                    a[int(i[0])] = []
+                    a[int(i[0])].append(i[2])
+                else:
+                    a[int(i[0])].append(i[2])
+            for i in a.keys():
+                if i not in self.pitdata.keys():
+                    self.pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
+                    self.pitlaps[i] = []
+                for pi in self.pitdata[i]:
+                    self.pitlaps[i].append(pi['lap'])
+                    self.pitlaps[i].append(pi['lap'] + 1)
+                if i not in self.acctime.keys():
+                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                      self.raceId, a[i])
+                else:
+                    self.acctime[i] = self.db.getLaptimesAccumViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                      self.raceId, a[i])
+                if i not in self.name.keys():
+                    self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+            for i in a.keys():
+                for j in a.keys():
+                    if i > j:
+                        plot_pool = QtChart.QLineSeries()
+                        for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
+                            if lap in self.acctime[i].keys() and lap in self.acctime[j].keys():
+                                if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
+                                    diff = self.acctime[i][lap] - self.acctime[j][lap]
+                                    plot_pool.append(lap, diff)
+                                else:
+                                    if not self.hide_pit_eelap:
+                                        diff = self.acctime[i][lap] - self.acctime[j][lap]
+                                        plot_pool.append(lap, diff)
+                        plot_pool.setName(self.name[i] + ' and ' + self.name[j])
+                        c.addSeries(plot_pool)
+        self.chartView_2.setChart(c)
+
+    def plotGapGraphQChart(self):
+        c = QtChart.QChart()
+        if self.status == 'lap':
+            length = len(self.drivers)
+            timing_pools = []
+            driver_pools = []
+            pitdata = {}
+            for i in range(length):
+                if self.laststate[i]:
+                    driver = self.drivers[i]
+                    timing = self.db.getLaptimesViaDriverIDRaceID(driver['driverId'], self.raceId)
+                    timing_pools.append(timing)
+                    driver_pools.append(driver)
+            for i in range(len(timing_pools)):
+                for j in range(i + 1, len(timing_pools)):
+                    plot_pool = QtChart.QLineSeries()
+                    pitlaps = []
+                    pitdata_i = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[i]['driverId'])
+                    pitdata_j = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[j]['driverId'])
+                    if len(pitdata_i):
+                        for pi in pitdata_i:
+                            pitlaps.append(pi['lap'])
+                            pitlaps.append(pi['lap'] + 1)
+                    if len(pitdata_j):
+                        for pj in pitdata_j:
+                            pitlaps.append(pj['lap'])
+                            pitlaps.append(pj['lap'] + 1)
+                    for k in range(len(timing_pools[i])):
+                        if self.min_cal_lap <= timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                            try:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
+                                    time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
+                                    time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
+                                    delta_time = time0 - time1
+                                    plot_pool.append(timing_pools[i][k]['lap'],delta_time)
+                                else:
+                                    if not self.hide_pit_eelap:
+                                        time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
+                                        time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
+                                        delta_time = time0 - time1
+                                        plot_pool.append(timing_pools[i][k]['lap'],delta_time)
+                            except IndexError:
+                                pass
+                    name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
+                    name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
+                    plot_pool.setName(name0 + ' and ' + name1)
+                    c.addSeries(plot_pool)
+            # except Exception as e:
+            #     print(e)
+        elif self.status == 'stint':
+            a = {}
+            for i in self.plot_list:
+                if int(i[0]) not in a.keys():
+                    a[int(i[0])] = []
+                    a[int(i[0])].append(i[2])
+                else:
+                    a[int(i[0])].append(i[2])
+            for i in a.keys():
+                if i not in self.pitdata.keys():
+                    self.pitdata[i] = self.db.getPitstopByRaceIdDriverId(self.raceId, self.drivers[i]['driverId'])
+                    self.pitlaps[i] = []
+                for pi in self.pitdata[i]:
+                    self.pitlaps[i].append(pi['lap'])
+                    self.pitlaps[i].append(pi['lap'] + 1)
+                if i not in self.laptime.keys():
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId, a[i])
+                else:
+                    self.laptime[i] = self.db.getLaptimesViaDriverIDRaceIDStints(self.drivers[i]['driverId'],
+                                                                                 self.raceId, a[i])
+                if i not in self.name.keys():
+                    self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
+
+            for i in a.keys():
+                for j in a.keys():
+                    if i > j:
+                        plot_pool = QtChart.QLineSeries()
+                        for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
+                            if lap in self.laptime[i].keys() and lap in self.laptime[j].keys():
+                                if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
+                                    diff = self.laptime[i][lap] - self.laptime[j][lap]
+                                    plot_pool.append(lap, diff)
+                                else:
+                                    if not self.hide_pit_eelap:
+                                        diff = self.laptime[i][lap] - self.laptime[j][lap]
+                                        plot_pool.append(lap, diff)
+                        plot_pool.setName(self.name[i] + ' and ' + self.name[j])
+                        c.addSeries(plot_pool)
+        self.chartView_3.setChart(c)
+
+
+    def plotAll(self):
+        print('-' * 20)
+        if self.plot_type == 'QtChart':
+            t0 = time.time()
+            self.plotTimeGraphQChart()
+            print('Time Graph(QtChart):', time.time() - t0)
+            t1 = time.time()
+            self.plotSpaceGapGraphQChart()
+            print('Space Graph(QtChart):', time.time() - t1)
+            t2 = time.time()
+            self.plotGapGraphQChart()
+            print('Time Gap Graph(QtChart):', time.time() - t2)
+            text0 = 'Plot Graph(QtChart):' + str(time.time() - t0)
+            print(text0)
+            self.label.setText(text0)
+        elif self.plot_type == 'matplotlib':
+            t0 = time.time()
+            self.plotTimeGraph()
+            print('Time Graph(matplotlib.pyplot):', time.time() - t0)
+            t1 = time.time()
+            self.plotSpaceGapGraph()
+            print('Space Graph(matplotlib.pyplot):', time.time() - t1)
+            t2 = time.time()
+            self.plotGapGraph()
+            print('Time Gap Graph(matplotlib.pyplot):', time.time() - t2)
+            text0 = 'Plot Graph(matplotlib.pyplot):' + str(time.time() - t0)
+            print(text0)
+            self.label.setText(text0)
+
+    def hidePitChecked(self):
+        boolean = self.checkBox.checkState()
+        self.hide_pit_eelap = bool(boolean)
+        # print(self.hide_pit_eelap)
+        self.plotAll()
+
+    def getRacesInThisYear(self):
+        self.comboBox_2.clear()
+        year = self.comboBox.currentText()
+        races = self.db.getRacesInAYearRecordedInLaptimes(year)
+        for i in races:
+            self.comboBox_2.addItem(i['name'])
+
+    def unlockPushbutton(self):
+        self.pushButton.setEnabled(True)
+
+    def getDriversInThisRace(self):
+        # self.canvas_2.clear()
+        # self.spacegapfig.clear()
+        # self.speedgapfig.clear()
+        self.pushButton.setEnabled(False)
+        self.checkbox = []
+        year = self.comboBox.currentText()
+        race_name = self.comboBox_2.currentText()
+        raceId = self.db.getRaceIDByYearName(year, race_name)
+        drivers_id = self.db.getGridByRaceID(raceId[0]['raceId'])
+        # self.pitdata = self.db.getPitstopsByRaceId(raceId[0]['raceId'])
+        self.initTable(drivers_id, raceId[0]['raceId'])
+        self.max_lap = self.db.getMaximumLap(raceId[0]['raceId'])[0]['max(lap)']
+        self.max_cal_lap = self.max_lap
+        # print(self.max_lap)
+        self.min_lap = 1
+        self.min_cal_lap = self.min_lap
+        if self.max_lap is not None:
+            self.spinBox.setMinimum(1)
+            # print(self.db.getMaximumLap(raceId[0]['raceId']))
+            self.spinBox.setMaximum(self.max_lap)
+            self.spinBox.setSingleStep(1)
+            self.spinBox_2.setMinimum(1)
+            self.spinBox_2.setMaximum(self.max_lap)
+            self.spinBox_2.setSingleStep(1)
+            self.spinBox_2.setValue(self.max_lap)
+            self.spinBox_2.setEnabled(True)
+            self.spinBox.setEnabled(True)
+        else:
+            self.spinBox_2.setEnabled(False)
+            self.spinBox.setEnabled(False)
+
+    def showPos(self):
+
+        length = self.tableWidget.rowCount()
+        curstate = bitarray.bitarray(length)
+        curstate.setall(False)
+        for i in range(self.tableWidget.rowCount()):
+            if self.tableWidget.item(i, 0).checkState():
+                curstate[i] = 1
+        if bitarray.bitdiff(curstate, self.laststate):
+            self.laststate = curstate
+            # print(self.laststate)
+            self.plotAll()
+
+    def mssmmm2ms(self, time):
+        minute = 0
+        if ':' in time:
+            sep = time.split(':')
+            minute = int(sep[0])
+            time = sep[1]
+        if '.' in time:
+            sep = time.split('.')
+            second = int(sep[0])
+            millisecond = int(sep[1])
+        else:
+            second = int(time)
+            millisecond = 0
+        return millisecond + 1000 * second + 60000 * minute
+
     def changeStartLap(self):
-        cur_lap = self.SpinBox.value()
-        self.SpinBox_2.setMinimum(cur_lap)
+        cur_lap = self.spinBox.value()
+        self.spinBox_2.setMinimum(cur_lap)
         self.min_cal_lap = cur_lap
         self.plotAll()
 
     def changeEndLap(self):
-        self.max_cal_lap = self.SpinBox_2.value()
+        self.max_cal_lap = self.spinBox_2.value()
         self.plotAll()
 
     def tyreClicked(self):
@@ -517,7 +779,6 @@ class Ui_Dialog(object):
                 plot_list.append(string)
         self.plot_list = plot_list
         self.plotAll()
-
 
     def initTable(self, drivers, raceId):
         stint_data = self.db.getTyreStintByRaceId(raceId)
@@ -543,7 +804,7 @@ class Ui_Dialog(object):
             # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
             # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
             # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
-            self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'End', 'Pits','Tyre'])
+            self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'End', 'Pits', 'Tyre'])
             self.tableWidget.setRowCount(len(drivers))
             rowcount = 0
             # self.pitstops = self.db.getPitstopsByRaceId(raceId)
@@ -552,13 +813,13 @@ class Ui_Dialog(object):
                 i = drivers[num]
                 # table_color = QtGui.QPalette()
                 # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
-                pitstops = self.db.getPitstopByRaceIdDriverId(raceId,i['driverId'])
+                pitstops = self.db.getPitstopByRaceIdDriverId(raceId, i['driverId'])
                 pitstop_counts = len(pitstops)
                 font = QtGui.QFont()
-                color = QtGui.QColor(192, 192, 192,128)
+                color = QtGui.QColor(192, 192, 192, 128)
                 finish_pos_raw = self.db.getResultStandingByRaceIDandDriverId(raceId, i['driverId'])
                 finish_pos = finish_pos_raw[0]['position']
-                start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId,i['driverId'])
+                start_pos_raw = self.db.getStartposByRaceIDDriverID(raceId, i['driverId'])
                 try:
                     start_pos = start_pos_raw[0]['position']
                 except IndexError:
@@ -618,8 +879,8 @@ class Ui_Dialog(object):
                         #     QtCore.Qt.ItemIsSelectable)
                     elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
                             or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
-                            or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95\
-                            or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132\
+                            or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95 \
+                            or 98 <= finish_status_Id <= 110 or finish_status_Id == 121 or finish_status_Id == 126 or 129 <= finish_status_Id <= 132 \
                             or 135 <= finish_status_Id <= 137:
                         finishpos = QtWidgets.QTableWidgetItem("RET")
                         # check.setFlags(
@@ -676,7 +937,7 @@ class Ui_Dialog(object):
                 for i in tyre_stints:
                     label_stint = QtWidgets.QLabel()
                     label_stint.setFixedWidth(20)
-                    label_stint.setPixmap(self.tyre_img[i['tyreName']].scaled(list_height,list_height))
+                    label_stint.setPixmap(self.tyre_img[i['tyreName']].scaled(list_height, list_height))
                     label_stint.setAutoFillBackground(True)
                     laps_stint = QtWidgets.QLabel()
                     laps_stint.setFixedWidth(18)
@@ -685,12 +946,12 @@ class Ui_Dialog(object):
                     stint_1.setFixedWidth(30)
                     # stint_1.setFixedHeight(list_height)
                     stint_1.setCheckState(QtCore.Qt.Unchecked)
-                    stint_1.setObjectName(str(rowcount)+'-'+str(5)+'-'+str(check_count))
+                    stint_1.setObjectName(str(rowcount) + '-' + str(5) + '-' + str(check_count))
                     self.checkbox.append(stint_1)
                     # print(self.checkbox)
                     check_count += 1
                     check_color = QtGui.QPalette()
-                    check_color.setColor(QtGui.QPalette.Base,QtGui.QColor(255,255,255))
+                    check_color.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
                     stint_1.setPalette(check_color)
                     layout_tyres.addWidget(label_stint, QtCore.Qt.AlignLeft)
                     layout_tyres.addWidget(laps_stint, QtCore.Qt.AlignLeft)
@@ -725,7 +986,7 @@ class Ui_Dialog(object):
             # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
             # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
             # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
-            self.tableWidget.setHorizontalHeaderLabels(['Checked','Code', 'Name', 'Grid', 'End', 'Pits'])
+            self.tableWidget.setHorizontalHeaderLabels(['Checked', 'Code', 'Name', 'Grid', 'End', 'Pits'])
             self.tableWidget.setRowCount(len(drivers))
             rowcount = 0
             # self.pitstops = self.db.getPitstopsByRaceId(raceId)
@@ -769,7 +1030,6 @@ class Ui_Dialog(object):
                 item0.setFont(font)
                 item0.setBackground(color)
 
-                check.setBackground(color)
                 if finish_pos is None:
                     item0.setForeground(QtGui.QColor(255, 255, 255))
                 item0.setFlags(
@@ -854,8 +1114,6 @@ class Ui_Dialog(object):
                 self.tableWidget.setItem(rowcount, 0, check)
                 rowcount += 1
 
-
-
     def connection(self):
         for i in self.checkbox:
             i.clicked.connect(self.tyreClicked)
@@ -871,37 +1129,57 @@ class Ui_Dialog(object):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
 
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.comboBox = QtWidgets.QComboBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        self.gridLayout_2 = QtWidgets.QGridLayout()
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.label_2 = QtWidgets.QLabel(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.comboBox.sizePolicy().hasHeightForWidth())
-        self.comboBox.setSizePolicy(sizePolicy)
-        self.comboBox.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.comboBox.setCurrentText("")
-        self.comboBox.setObjectName("comboBox")
-        self.horizontalLayout.addWidget(self.comboBox)
-        self.comboBox_2 = QtWidgets.QComboBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
+        self.label_2.setSizePolicy(sizePolicy)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_2.addWidget(self.label_2, 0, 0, 1, 1)
+        self.label_3 = QtWidgets.QLabel(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.comboBox_2.sizePolicy().hasHeightForWidth())
-        self.comboBox_2.setSizePolicy(sizePolicy)
-        self.comboBox_2.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.comboBox_2.setObjectName("comboBox_2")
-        self.horizontalLayout.addWidget(self.comboBox_2)
-        self.pushButton = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(self.label_3.sizePolicy().hasHeightForWidth())
+        self.label_3.setSizePolicy(sizePolicy)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout_2.addWidget(self.label_3, 0, 2, 1, 1)
+        self.spinBox = QtWidgets.QSpinBox(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
-        self.pushButton.setSizePolicy(sizePolicy)
-        self.pushButton.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.pushButton.setObjectName("pushButton")
-        self.horizontalLayout.addWidget(self.pushButton)
-        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 1)
+        sizePolicy.setHeightForWidth(self.spinBox.sizePolicy().hasHeightForWidth())
+        self.spinBox.setSizePolicy(sizePolicy)
+        self.spinBox.setObjectName("spinBox")
+        self.gridLayout_2.addWidget(self.spinBox, 0, 1, 1, 1)
+        self.spinBox_2 = QtWidgets.QSpinBox(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.spinBox_2.sizePolicy().hasHeightForWidth())
+        self.spinBox_2.setSizePolicy(sizePolicy)
+        self.spinBox_2.setObjectName("spinBox_2")
+        self.gridLayout_2.addWidget(self.spinBox_2, 0, 3, 1, 1)
+        self.label_4 = QtWidgets.QLabel(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy)
+        self.label_4.setObjectName("label_4")
+        self.gridLayout_2.addWidget(self.label_4, 1, 0, 1, 1)
+        self.checkBox = QtWidgets.QCheckBox(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
+        self.checkBox.setSizePolicy(sizePolicy)
+        self.checkBox.setObjectName("checkBox")
+        self.gridLayout_2.addWidget(self.checkBox, 1, 1, 1, 1)
+        self.gridLayout.addLayout(self.gridLayout_2, 2, 1, 1, 1)
         self.tableWidget = QtWidgets.QTableWidget(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -911,86 +1189,121 @@ class Ui_Dialog(object):
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
-        self.gridLayout.addWidget(self.tableWidget, 1, 0, 2, 1)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.label = QtWidgets.QLabel(self.layoutWidget)
-        self.label.setObjectName("label")
-        self.horizontalLayout_2.addWidget(self.label)
-        self.SpinBox = QtWidgets.QSpinBox(self.layoutWidget)
-        self.SpinBox.setObjectName("SpinBox")
-        self.horizontalLayout_2.addWidget(self.SpinBox)
-        self.label_2 = QtWidgets.QLabel(self.layoutWidget)
-        self.label_2.setObjectName("label_2")
-        self.horizontalLayout_2.addWidget(self.label_2)
-        self.SpinBox_2 = QtWidgets.QSpinBox(self.layoutWidget)
-        self.SpinBox_2.setObjectName("SpinBox_2")
-        self.horizontalLayout_2.addWidget(self.SpinBox_2)
-        self.checkBox = QtWidgets.QCheckBox(self.layoutWidget)
-        self.checkBox.setObjectName("checkBox")
-        self.horizontalLayout_2.addWidget(self.checkBox)
-        self.gridLayout.addLayout(self.horizontalLayout_2, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.tableWidget, 1, 0, 1, 1)
         self.tabWidget = QtWidgets.QTabWidget(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
+        self.tabWidget.setSizePolicy(sizePolicy)
         self.tabWidget.setObjectName("tabWidget")
 
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
+
+        self.gridLayout_tab_1 = QtWidgets.QGridLayout(self.tab)
+        self.gridLayout_tab_1.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_tab_1.setObjectName("gridLayout_tab_1")
+
+        if self.plot_type == 'QtChart':
+            self.chartView = QtChart.QChartView(self.tab)
+            self.chartView.setMaximumSize(QtCore.QSize(3000, 2000))
+            self.chartView.setObjectName("chartView")
+            self.gridLayout_tab_1.addWidget(self.chartView, 0, 0, 1, 1)
+
+        elif self.plot_type == 'matplotlib':
+            self.laptimefig = plt.Figure()
+            self.canvas = FC(self.laptimefig)
+            self.canvas.setObjectName("canvas")
+            self.gridLayout_tab_1.addWidget(self.canvas, 0, 0, 1, 1)
+
         self.tabWidget.addTab(self.tab, "")
-
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.tab)
-        self.gridLayout_2.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_2.setObjectName("gridLayout_2")
-
-        self.laptimefig = plt.Figure()
-        self.canvas = FC(self.laptimefig)
-        self.canvas.setObjectName("canvas")
-        self.gridLayout_2.addWidget(self.canvas, 2, 1, 1, 1)
 
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
+
+        self.gridLayout_tab_2 = QtWidgets.QGridLayout(self.tab_2)
+        self.gridLayout_tab_2.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_tab_2.setObjectName("gridLayout_tab_2")
+
+        if self.plot_type == 'QtChart':
+            self.chartView_2 = QtChart.QChartView(self.tab_2)
+            self.chartView_2.setGeometry(QtCore.QRect(10, 10, 359, 349))
+            self.chartView_2.setObjectName("chartView_2")
+            self.gridLayout_tab_2.addWidget(self.chartView_2, 0, 0, 1, 1)
+
+        elif self.plot_type == 'matplotlib':
+            self.speedgapfig = plt.Figure()
+            self.canvas_2 = FC(self.speedgapfig)
+            self.canvas_2.setObjectName("canvas_2")
+            self.gridLayout_tab_2.addWidget(self.canvas_2, 0, 0, 1, 1)
+
         self.tabWidget.addTab(self.tab_2, "")
-
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.tab_2)
-        self.gridLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_3.setObjectName("gridLayout_3")
-
-        self.speedgapfig = plt.Figure()
-        self.canvas_2 = FC(self.speedgapfig)
-        self.canvas_2.setObjectName("canvas_2")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.canvas_2.sizePolicy().hasHeightForWidth())
-        # self.canvas_2.setSizePolicy(sizePolicy)
-        self.gridLayout_3.addWidget(self.canvas_2, 2, 1, 1, 1)
 
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
+
+        self.gridLayout_tab_3 = QtWidgets.QGridLayout(self.tab_3)
+        self.gridLayout_tab_3.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_tab_3.setObjectName("gridLayout_tab_3")
+
+        if self.plot_type == 'QtChart':
+            self.chartView_3 = QtChart.QChartView(self.tab_3)
+            self.chartView_3.setGeometry(QtCore.QRect(10, 10, 359, 349))
+            self.chartView_3.setObjectName("chartView_3")
+            self.gridLayout_tab_3.addWidget(self.chartView_3, 0, 0, 1, 1)
+
+        elif self.plot_type == 'matplotlib':
+            self.spacegapfig = plt.Figure()
+            self.canvas_3 = FC(self.spacegapfig)
+            self.canvas_3.setObjectName("canvas_3")
+            self.gridLayout_tab_3.addWidget(self.canvas_3, 0, 0, 1, 1)
+
         self.tabWidget.addTab(self.tab_3, "")
 
-        self.gridLayout_4 = QtWidgets.QGridLayout(self.tab_3)
-        self.gridLayout_4.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_4.setObjectName("gridLayout_4")
-
-        self.spacegapfig = plt.Figure()
-        self.canvas_3 = FC(self.spacegapfig)
-        self.canvas_3.setObjectName("canvas_3")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout.addWidget(self.tabWidget, 1, 1, 1, 1)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.comboBox = QtWidgets.QComboBox(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.canvas_3.sizePolicy().hasHeightForWidth())
-        self.canvas_3.setSizePolicy(sizePolicy)
-        self.gridLayout_4.addWidget(self.canvas_3, 2, 1, 1, 1)
+        sizePolicy.setHeightForWidth(self.comboBox.sizePolicy().hasHeightForWidth())
+        self.comboBox.setSizePolicy(sizePolicy)
+        self.comboBox.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.comboBox.setObjectName("comboBox")
+        self.horizontalLayout.addWidget(self.comboBox)
+        self.comboBox_2 = QtWidgets.QComboBox(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.comboBox_2.sizePolicy().hasHeightForWidth())
+        self.comboBox_2.setSizePolicy(sizePolicy)
+        self.comboBox_2.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.comboBox_2.setObjectName("comboBox_2")
+        self.horizontalLayout.addWidget(self.comboBox_2)
+        self.pushButton = QtWidgets.QPushButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
+        self.pushButton.setSizePolicy(sizePolicy)
+        self.pushButton.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.pushButton.setObjectName("pushButton")
+        self.horizontalLayout.addWidget(self.pushButton)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 2)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.label = QtWidgets.QLabel(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setObjectName("label")
+        self.horizontalLayout_2.addWidget(self.label)
+        self.gridLayout.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
 
-        self.gridLayout.addWidget(self.tabWidget, 1, 1, 1, 1)
-        # Dialog.setCentralWidget(self.centralwidget)
-        # self.statusbar = QtWidgets.QStatusBar(Dialog)
-        # self.statusbar.setObjectName("statusbar")
-        # Dialog.setStatusBar(self.statusbar)
-        
         self.initialize()
         self.comboBox.currentIndexChanged.connect(self.getRacesInThisYear)
         self.comboBox.currentIndexChanged.connect(self.unlockPushbutton)
@@ -998,45 +1311,43 @@ class Ui_Dialog(object):
         self.pushButton.clicked.connect(self.getDriversInThisRace)
         self.tableWidget.clicked.connect(self.showPos)
 
-
         self.checkBox.clicked.connect(self.hidePitChecked)
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        self.SpinBox.setEnabled(False)
-        self.SpinBox_2.setEnabled(False)
+        self.spinBox.setEnabled(False)
+        self.spinBox.setEnabled(False)
+        self.spinBox_2.setEnabled(False)
         self.pushButton.click()
-        self.SpinBox.valueChanged.connect(self.changeStartLap)
-        self.SpinBox_2.valueChanged.connect(self.changeEndLap)
-        # self.connection()
+        self.spinBox.valueChanged.connect(self.changeStartLap)
+        self.spinBox_2.valueChanged.connect(self.changeEndLap)
+
+        self.retranslateUi(Dialog)
+        self.tabWidget.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.7"))
-        self.pushButton.setText(_translate("Dialog", "Search"))
-        self.label.setText(_translate("Dialog", "Lap Start"))
-        self.label_2.setText(_translate("Dialog", "Lap End"))
-        self.checkBox.setText(_translate("Dialog", "Hide pit entry/exit lap"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.0 alpha"))
+        self.label.setText(_translate("Dialog", "Ready."))
+        self.label_2.setText(_translate("Dialog", "StartLap:"))
+        self.label_3.setText(_translate("Dialog", "FinishLap:"))
+        self.label_4.setText(_translate("Dialog", "PitEntry/Exit"))
+        self.checkBox.setText(_translate("Dialog", "Hide"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Dialog", "Lap Time"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Speed Gap"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "Car Gap"))
+        self.pushButton.setText(_translate("Dialog", "Go"))
 
-class CommonHelper:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def readQss(style):
-        with open(style, 'r') as f:
-            return f.read()
 
 if __name__ == "__main__":
     import sys
+
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
-    ui = Ui_Dialog()
+    ui = Ui_Dialog(plot_type='matplotlib')
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
