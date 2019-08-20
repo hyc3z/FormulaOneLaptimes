@@ -863,22 +863,14 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(1366, 768)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
-        Dialog.setSizePolicy(sizePolicy)
-        Dialog.setMinimumSize(QtCore.QSize(1024, 768))
-        Dialog.setMaximumSize(QtCore.QSize(3840, 2160))
-        self.centralwidget = QtWidgets.QWidget(Dialog)
-        self.centralwidget.setObjectName("centralwidget")
-        self.layoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.layoutWidget.setGeometry(QtCore.QRect(20, 20, 1061, 631))
-        self.layoutWidget.setObjectName("layoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(Dialog)
 
+        self.layoutWidget = QtWidgets.QWidget(Dialog)
+        self.layoutWidget.setObjectName("layoutWidget")
+
+        self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
+
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.comboBox = QtWidgets.QComboBox(self.layoutWidget)
@@ -944,10 +936,8 @@ class Ui_Dialog(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.tabWidget.addTab(self.tab, "")
-        self.gridLayoutWidget = QtWidgets.QWidget(self.tab)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 10, 511, 541))
-        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.gridLayoutWidget)
+
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.tab)
         self.gridLayout_2.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_2.setObjectName("gridLayout_2")
@@ -965,10 +955,8 @@ class Ui_Dialog(object):
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
         self.tabWidget.addTab(self.tab_2, "")
-        self.gridLayoutWidget_2 = QtWidgets.QWidget(self.tab_2)
-        self.gridLayoutWidget_2.setGeometry(QtCore.QRect(10, 10, 511, 541))
-        self.gridLayoutWidget_2.setObjectName("gridLayoutWidget_2")
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.gridLayoutWidget_2)
+
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.tab_2)
         self.gridLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
@@ -980,16 +968,14 @@ class Ui_Dialog(object):
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.canvas_2.sizePolicy().hasHeightForWidth())
-        self.canvas_2.setSizePolicy(sizePolicy)
+        # self.canvas_2.setSizePolicy(sizePolicy)
         self.gridLayout_3.addWidget(self.canvas_2, 2, 1, 1, 1)
 
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
         self.tabWidget.addTab(self.tab_3, "")
-        self.gridLayoutWidget_3 = QtWidgets.QWidget(self.tab_3)
-        self.gridLayoutWidget_3.setGeometry(QtCore.QRect(10, 10, 511, 541))
-        self.gridLayoutWidget_3.setObjectName("gridLayoutWidget_3")
-        self.gridLayout_4 = QtWidgets.QGridLayout(self.gridLayoutWidget_3)
+
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.tab_3)
         self.gridLayout_4.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -1030,7 +1016,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.5"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.6"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
