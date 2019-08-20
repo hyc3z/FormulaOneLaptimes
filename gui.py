@@ -667,19 +667,19 @@ class Ui_Dialog(object):
 
 
     def plotAll(self):
-        print('-' * 20)
+        # print('-' * 20)
         if self.plot_type == 'QtChart':
             t0 = time.time()
             self.plotTimeGraphQChart()
-            print('Time Graph(QtChart):', time.time() - t0)
+            # print('Time Graph(QtChart):', time.time() - t0)
             t1 = time.time()
             self.plotSpaceGapGraphQChart()
-            print('Space Graph(QtChart):', time.time() - t1)
+            # print('Space Graph(QtChart):', time.time() - t1)
             t2 = time.time()
             self.plotGapGraphQChart()
-            print('Time Gap Graph(QtChart):', time.time() - t2)
+            # print('Time Gap Graph(QtChart):', time.time() - t2)
             text0 = 'Plot Graph(QtChart):' + str(time.time() - t0)
-            print(text0)
+            # print(text0)
             self.label.setText(text0)
         elif self.plot_type == 'matplotlib':
             t0 = time.time()
@@ -733,7 +733,9 @@ class Ui_Dialog(object):
                 for i in range(self.tableWidget.rowCount()):
                     self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.Unchecked)
                 self.laststate.setall(False)
+        self.checkBox_2.setEnabled(False)
         self.plotAll()
+        self.checkBox_2.setEnabled(True)
 
     def getDriversInThisRace(self):
         # self.canvas_2.clear()
@@ -1368,7 +1370,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.0"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.1"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
@@ -1381,6 +1383,7 @@ class Ui_Dialog(object):
         self.pushButton.setText(_translate("Dialog", "Go"))
 
 
+
 if __name__ == "__main__":
     import sys
 
@@ -1389,7 +1392,7 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
-    ui = Ui_Dialog(plot_type='QtChart')
+    ui = Ui_Dialog(plot_type='matplotlib')
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())

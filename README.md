@@ -12,7 +12,7 @@ The data contains multiple tables all in a MySQL db, and will be updated after e
 
 Requirements
 
-`$ pip3 install pyqt5 requests matplotlib bitarray pymysql`
+`$ pip3 install pyqt5 requests matplotlib bitarray pymysql pyqtchart`
 
 You may set up a native MySQL environment, and create the needed database via the .sql file provided by ergast.com , but since it is no easy job, I've used the [mysql2sqlite](https://github.com/dumblob/mysql2sqlite) to generate a sqlite db, and you may download the db that comes with 0.2.1 version
 [here](https://github.com/Hycdog/F1_Analyz/releases/download/v0.5.5/f1.db).
