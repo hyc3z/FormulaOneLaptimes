@@ -302,7 +302,7 @@ class Ui_Dialog(object):
                             pitlaps.append(pj['lap'])
                             pitlaps.append(pj['lap'] + 1)
                     for k in range(len(timing_pools[i])):
-                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap and timing_pools[j][k]['lap'] >= self.min_cal_lap and timing_pools[j][k]['lap'] <= self.max_cal_lap:
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
                             try:
                                 if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
                                     time0 = timing_pools[i][k]['timeElapsed']
@@ -416,7 +416,7 @@ class Ui_Dialog(object):
                             pitlaps.append(pj['lap'])
                             pitlaps.append(pj['lap'] + 1)
                     for k in range(len(timing_pools[i])):
-                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap and timing_pools[j][k]['lap'] >= self.min_cal_lap and timing_pools[j][k]['lap'] <= self.max_cal_lap:
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap :
                             try:
                                 if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
                                     time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
@@ -944,11 +944,6 @@ class Ui_Dialog(object):
 
         self.laptimefig = plt.Figure()
         self.canvas = FC(self.laptimefig)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
-        self.canvas.setSizePolicy(sizePolicy)
         self.canvas.setObjectName("canvas")
         self.gridLayout_2.addWidget(self.canvas, 2, 1, 1, 1)
 
@@ -1016,7 +1011,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.6"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.6.7"))
         self.pushButton.setText(_translate("Dialog", "Search"))
         self.label.setText(_translate("Dialog", "Lap Start"))
         self.label_2.setText(_translate("Dialog", "Lap End"))
