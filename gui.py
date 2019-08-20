@@ -447,7 +447,6 @@ class Ui_Dialog(object):
                                 plot_pool.append(lap, time0)
                 plot_pool.setName(self.name[k])
                 c.addSeries(plot_pool)
-            self.chartView.setChart(c)
         elif self.status == 'lap':
             length = len(self.drivers)
             for i in range(length):
@@ -473,7 +472,17 @@ class Ui_Dialog(object):
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     plot_pool.setName(name)
                     c.addSeries(plot_pool)
-            self.chartView.setChart(c)
+
+        # x_axis = QtChart.QValueAxis()
+        # x_axis.setTickCount(6)
+        # x_axis.setMinorTickCount(6)
+        # y_axis = QtChart.QValueAxis()
+        # y_axis.setTickCount(6)
+        # y_axis.setMinorTickCount(6)
+        # c.setAxisX(x_axis)
+        # c.setAxisY(y_axis)
+        c.createDefaultAxes()
+        self.chartView.setChart(c)
 
     def plotSpaceGapGraphQChart(self):
         c = QtChart.QChart()
@@ -562,6 +571,7 @@ class Ui_Dialog(object):
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
                         c.addSeries(plot_pool)
+        c.createDefaultAxes()
         self.chartView_2.setChart(c)
 
     def plotGapGraphQChart(self):
@@ -652,6 +662,7 @@ class Ui_Dialog(object):
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
                         c.addSeries(plot_pool)
+        c.createDefaultAxes()
         self.chartView_3.setChart(c)
 
 
@@ -1327,7 +1338,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.0 alpha"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.0"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
@@ -1347,7 +1358,7 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
-    ui = Ui_Dialog(plot_type='matplotlib')
+    ui = Ui_Dialog(plot_type='QtChart')
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
