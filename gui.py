@@ -670,30 +670,42 @@ class Ui_Dialog(object):
         # print('-' * 20)
         if self.plot_type == 'QtChart':
             t0 = time.time()
+            self.label_5.setText('Plotting Time Graph...')
+            self.label_5.repaint()
             self.plotTimeGraphQChart()
             # print('Time Graph(QtChart):', time.time() - t0)
             t1 = time.time()
+            self.label_5.setText('Plotting Car Gap Graph...')
+            self.label_5.repaint()
             self.plotSpaceGapGraphQChart()
             # print('Space Graph(QtChart):', time.time() - t1)
             t2 = time.time()
+            self.label_5.setText('Plotting Time Gap Graph...')
+            self.label_5.repaint()
             self.plotGapGraphQChart()
             # print('Time Gap Graph(QtChart):', time.time() - t2)
             text0 = 'Plot Graph(QtChart):' + str(time.time() - t0)
             # print(text0)
             self.label.setText(text0)
+            # self.label_5.setText('')
         elif self.plot_type == 'matplotlib':
             t0 = time.time()
             self.plotTimeGraph()
-            print('Time Graph(matplotlib.pyplot):', time.time() - t0)
+            self.label_5.setText('Plotting Time Graph...')
+            self.label_5.repaint()
             t1 = time.time()
             self.plotSpaceGapGraph()
-            print('Space Graph(matplotlib.pyplot):', time.time() - t1)
+            self.label_5.setText('Plotting Car Gap Graph...')
+            self.label_5.repaint()
             t2 = time.time()
             self.plotGapGraph()
-            print('Time Gap Graph(matplotlib.pyplot):', time.time() - t2)
+            self.label_5.setText('Plotting Time Gap Graph...')
+            self.label_5.repaint()
             text0 = 'Plot Graph(matplotlib.pyplot):' + str(time.time() - t0)
             print(text0)
             self.label.setText(text0)
+            self.label_5.setText('')
+
 
     def hidePitChecked(self):
         boolean = self.checkBox.checkState()
@@ -712,6 +724,8 @@ class Ui_Dialog(object):
         self.pushButton.setEnabled(True)
 
     def checkAll(self):
+        self.checkBox_2.setEnabled(False)
+        self.checkBox_2.repaint()
         if self.checkBox_2.checkState():
             if self.status == 'stint':
                 plot_list = []
@@ -733,9 +747,9 @@ class Ui_Dialog(object):
                 for i in range(self.tableWidget.rowCount()):
                     self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.Unchecked)
                 self.laststate.setall(False)
-        self.checkBox_2.setEnabled(False)
         self.plotAll()
         self.checkBox_2.setEnabled(True)
+        self.checkBox_2.repaint()
 
     def getDriversInThisRace(self):
         # self.canvas_2.clear()
@@ -1155,6 +1169,28 @@ class Ui_Dialog(object):
         for i in self.checkbox:
             i.clicked.connect(self.tyreClicked)
 
+
+    def toggleButton(self):
+        if self.radioButton.isChecked():
+            self.plot_type = 'QtChart'
+            self.chartView.setVisible(True)
+            self.canvas.setVisible(False)
+            self.chartView_2.setVisible(True)
+            self.canvas_2.setVisible(False)
+            self.chartView_3.setVisible(True)
+            self.canvas_3.setVisible(False)
+            self.plotAll()
+
+        elif self.radioButton_2.isChecked():
+            self.plot_type = 'matplotlib'
+            self.chartView.setVisible(False)
+            self.canvas.setVisible(True)
+            self.chartView_2.setVisible(False)
+            self.canvas_2.setVisible(True)
+            self.chartView_3.setVisible(False)
+            self.canvas_3.setVisible(True)
+            self.plotAll()
+
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(1366, 768)
@@ -1218,6 +1254,25 @@ class Ui_Dialog(object):
         self.checkBox.setSizePolicy(sizePolicy)
         self.checkBox.setObjectName("checkBox")
         self.gridLayout_2.addWidget(self.checkBox, 1, 1, 1, 1)
+
+        self.radioButton = QtWidgets.QRadioButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
+        self.radioButton.setSizePolicy(sizePolicy)
+        self.radioButton.setObjectName("radioButton")
+        self.gridLayout_2.addWidget(self.radioButton, 1, 2, 1, 1)
+
+        self.radioButton_2 = QtWidgets.QRadioButton(self.layoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
+        self.radioButton_2.setSizePolicy(sizePolicy)
+        self.radioButton_2.setObjectName("radioButton_2")
+        self.gridLayout_2.addWidget(self.radioButton_2, 1, 3, 1, 1)
+
         self.gridLayout.addLayout(self.gridLayout_2, 2, 1, 1, 1)
         self.tableWidget = QtWidgets.QTableWidget(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -1244,16 +1299,24 @@ class Ui_Dialog(object):
         self.gridLayout_tab_1.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_tab_1.setObjectName("gridLayout_tab_1")
 
-        if self.plot_type == 'QtChart':
-            self.chartView = QtChart.QChartView(self.tab)
-            self.chartView.setObjectName("chartView")
-            self.gridLayout_tab_1.addWidget(self.chartView, 0, 0, 1, 1)
+        # if self.plot_type == 'QtChart':
+        self.chartView = QtChart.QChartView(self.tab)
+        self.chartView.setObjectName("chartView")
+        self.gridLayout_tab_1.addWidget(self.chartView, 0, 0, 1, 1)
 
-        elif self.plot_type == 'matplotlib':
-            self.laptimefig = plt.Figure()
-            self.canvas = FC(self.laptimefig)
-            self.canvas.setObjectName("canvas")
-            self.gridLayout_tab_1.addWidget(self.canvas, 0, 0, 1, 1)
+        # elif self.plot_type == 'matplotlib':
+        self.laptimefig = plt.Figure()
+        self.canvas = FC(self.laptimefig)
+        self.canvas.setObjectName("canvas")
+        self.gridLayout_tab_1.addWidget(self.canvas, 0, 0, 1, 1)
+
+
+        if self.plot_type == 'QtChart':
+            self.chartView.setVisible(True)
+            self.canvas.setVisible(False)
+        else:
+            self.chartView.setVisible(False)
+            self.canvas.setVisible(True)
 
         self.tabWidget.addTab(self.tab, "")
 
@@ -1264,16 +1327,23 @@ class Ui_Dialog(object):
         self.gridLayout_tab_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_tab_2.setObjectName("gridLayout_tab_2")
 
-        if self.plot_type == 'QtChart':
-            self.chartView_2 = QtChart.QChartView(self.tab_2)
-            self.chartView_2.setObjectName("chartView_2")
-            self.gridLayout_tab_2.addWidget(self.chartView_2, 0, 0, 1, 1)
+        # if self.plot_type == 'QtChart':
+        self.chartView_2 = QtChart.QChartView(self.tab_2)
+        self.chartView_2.setObjectName("chartView_2")
+        self.gridLayout_tab_2.addWidget(self.chartView_2, 0, 0, 1, 1)
 
-        elif self.plot_type == 'matplotlib':
-            self.speedgapfig = plt.Figure()
-            self.canvas_2 = FC(self.speedgapfig)
-            self.canvas_2.setObjectName("canvas_2")
-            self.gridLayout_tab_2.addWidget(self.canvas_2, 0, 0, 1, 1)
+        # elif self.plot_type == 'matplotlib':
+        self.speedgapfig = plt.Figure()
+        self.canvas_2 = FC(self.speedgapfig)
+        self.canvas_2.setObjectName("canvas_2")
+        self.gridLayout_tab_2.addWidget(self.canvas_2, 0, 0, 1, 1)
+
+        if self.plot_type == 'QtChart':
+            self.chartView_2.setVisible(True)
+            self.canvas_2.setVisible(False)
+        else:
+            self.chartView_2.setVisible(False)
+            self.canvas_2.setVisible(True)
 
         self.tabWidget.addTab(self.tab_2, "")
 
@@ -1284,16 +1354,22 @@ class Ui_Dialog(object):
         self.gridLayout_tab_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_tab_3.setObjectName("gridLayout_tab_3")
 
-        if self.plot_type == 'QtChart':
-            self.chartView_3 = QtChart.QChartView(self.tab_3)
-            self.chartView_3.setObjectName("chartView_3")
-            self.gridLayout_tab_3.addWidget(self.chartView_3, 0, 0, 1, 1)
+        self.chartView_3 = QtChart.QChartView(self.tab_3)
+        self.chartView_3.setObjectName("chartView_3")
+        self.gridLayout_tab_3.addWidget(self.chartView_3, 0, 0, 1, 1)
 
-        elif self.plot_type == 'matplotlib':
-            self.spacegapfig = plt.Figure()
-            self.canvas_3 = FC(self.spacegapfig)
-            self.canvas_3.setObjectName("canvas_3")
-            self.gridLayout_tab_3.addWidget(self.canvas_3, 0, 0, 1, 1)
+        # elif self.plot_type == 'matplotlib':
+        self.spacegapfig = plt.Figure()
+        self.canvas_3 = FC(self.spacegapfig)
+        self.canvas_3.setObjectName("canvas_3")
+        self.gridLayout_tab_3.addWidget(self.canvas_3, 0, 0, 1, 1)
+
+        if self.plot_type == 'QtChart':
+            self.chartView_3.setVisible(True)
+            self.canvas_3.setVisible(False)
+        else:
+            self.chartView_3.setVisible(False)
+            self.canvas_3.setVisible(True)
 
         self.tabWidget.addTab(self.tab_3, "")
 
@@ -1355,6 +1431,8 @@ class Ui_Dialog(object):
 
         self.checkBox.clicked.connect(self.hidePitChecked)
         self.checkBox_2.clicked.connect(self.checkAll)
+        self.radioButton.toggled.connect(self.toggleButton)
+        self.radioButton_2.toggled.connect(self.toggleButton)
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         self.spinBox.setEnabled(False)
@@ -1363,6 +1441,7 @@ class Ui_Dialog(object):
         self.pushButton.click()
         self.spinBox.valueChanged.connect(self.changeStartLap)
         self.spinBox_2.valueChanged.connect(self.changeEndLap)
+        self.radioButton.setChecked(True)
 
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
@@ -1370,17 +1449,21 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.1"))
+        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.2"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
         self.label_4.setText(_translate("Dialog", "PitEntry/Exit"))
+        self.label_5.setText(_translate("Dialog", ""))
         self.checkBox.setText(_translate("Dialog", "Hide"))
         self.checkBox_2.setText(_translate("Dialog", "Check All"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Dialog", "Lap Time"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Speed Gap"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "Car Gap"))
         self.pushButton.setText(_translate("Dialog", "Go"))
+        self.radioButton.setText(_translate("Dialog", "QtChart"))
+        self.radioButton_2.setText(_translate("Dialog", "Matplotlib"))
+
 
 
 
@@ -1392,7 +1475,9 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
-    ui = Ui_Dialog(plot_type='matplotlib')
+    # ui = Ui_Dialog(plot_type='matplotlib')
+    ui = Ui_Dialog(plot_type='QtChart')
+
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
