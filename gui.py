@@ -13,7 +13,6 @@ import bitarray
 import matplotlib.pyplot as plt
 import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
-from Widgets.Callout import Callout
 
 class CustomedQLineSeries(QtChart.QLineSeries):
 
@@ -32,10 +31,7 @@ class CustomedQLineSeries(QtChart.QLineSeries):
         self.Signal_name_hovered.emit(self.name())
 
     def getAllpoints(self):
-        values = []
-        for i in range(self.count()):
-            values.append(self.at(i))
-        return values
+        return list(self.pointsVector())
 
     def highlighted(self, point, state):
         if state:
@@ -55,21 +51,10 @@ class CustomedQLineSeries(QtChart.QLineSeries):
 class CustomedQChartView(QtChart.QChartView):
 
     Signal_pos = QtCore.pyqtSignal(QtCore.QPointF)
+
     def __init__(self,parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
-
-    # def showTooltip(self, point, status):
-    #     self.m_tooltip = Callout()
-    #     self.m_tooltip.setText('fuck u pyqt5')
-    #     self.m_tooltip.setAnchor(point)
-    #     # self.m_tooltip.setZValue(11)
-    #     self.m_tooltip.updateGeometry()
-    #     self.m_tooltip.show()
-
-    # # def mouseMoveEvent(self, QMouseEvent):
-    # def onMouseMove(self):
-    #     self.Signal_pos.emit(self.cursor().pos())
 
 
 class Ui_Dialog(QtWidgets.QDialog):
@@ -123,29 +108,11 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.acctime = {}
         self.name = {}
 
-    # def mouseMoveEvent(self, event):
-    #     print('pos:',str(event.pos().x()) + ',' + str(event.pos().y()))
-    #     print('localPos:',str(event.localPos().x()) + ',' + str(event.localPos().y()))
-    #     print('windowPos:',str(event.windowPos().x()) + ',' + str(event.windowPos().y()))
-    #     print('screenPos:',str(event.screenPos().x()) + ',' + str(event.screenPos().y()))
-    #
-    #     if self.on_graph_lines:
-    #         if self.m_tooltip is None:
-    #             self.m_tooltip = Callout()
-    #         self.m_tooltip.setText(str(self.timegraph.mapToValue(event.scenePos()).x())+','+str(self.timegraph.mapToValue(event.scenePos()).y()))
-    #         self.m_tooltip.setAnchor(self.timegraph.mapToValue(event.scenePos()))
-    #         self.m_tooltip.setZValue(11)
-    #         self.m_tooltip.updateGeometry()
-    #         self.m_tooltip.show()
-    #     else:
-    #         if self.m_tooltip is not None:
-    #             self.m_tooltip.hide()
-
     def tooltip(self, point, state):
         if state:
             self.on_graph_lines = True
             self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-            self.setToolTip(self.hovered_name)
+            self.setToolTip(self.hovered_name+'\n'+str(point.x())+','+str(point.y()))
         else:
             self.on_graph_lines = False
             self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
@@ -172,12 +139,20 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.setWindowOpacity(curop)
             self.repaint()
 
+    def switchtab2_left(self):
+        self.tabWidget_2.setCurrentIndex(1)
+
+    def switchtab1_left(self):
+        self.tabWidget_2.setCurrentIndex(0)
+
+    def QLineClicked(self):
+        # TODO:Show detailed analyz on self.tab_left_2
+        self.switchtab2_left()
+
     def enterEvent(self, event):
         self.timer = QtCore.QTimer()
         self.timer.start(5)
         self.timer.timeout.connect(self.incrop)
-
-
 
     def leaveEvent(self, event):
         self.timer = QtCore.QTimer()
@@ -334,11 +309,9 @@ class Ui_Dialog(QtWidgets.QDialog):
                             pitlaps.append(pj['lap'])
                             pitlaps.append(pj['lap'] + 1)
                     for k in range(len(timing_pools[i])):
-                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k][
-                            'lap'] <= self.max_cal_lap:
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
-                                    'lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
                                     time0 = timing_pools[i][k]['timeElapsed']
                                     time1 = timing_pools[j][k]['timeElapsed']
                                     delta_time = time0 - time1
@@ -452,11 +425,9 @@ class Ui_Dialog(QtWidgets.QDialog):
                             pitlaps.append(pj['lap'])
                             pitlaps.append(pj['lap'] + 1)
                     for k in range(len(timing_pools[i])):
-                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k][
-                            'lap'] <= self.max_cal_lap:
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
-                                    'lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
                                     time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
                                     time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
                                     delta_time = time0 - time1
@@ -573,7 +544,6 @@ class Ui_Dialog(QtWidgets.QDialog):
                     if lap in self.laptime[k].keys():
                         if lap not in self.pitlaps[k]:
                             time0 = self.laptime[k][lap]
-
                             plot_pool.append(lap, time0)
                         else:
                             if not self.hide_pit_eelap:
@@ -581,6 +551,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                                 plot_pool.append(lap, time0)
                 plot_pool.setName(self.name[k])
                 plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                plot_pool.clicked.connect(self.QLineClicked)
                 plot_pool.hovered.connect(self.tooltip)
                 # plot_pool.hovered.connect(self.chartView.showTooltip)
                 self.timegraph.addSeries(plot_pool)
@@ -596,7 +567,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                         for i in pitdata:
                             pitlaps.append(i['lap'])
                             pitlaps.append(i['lap'] + 1)
-                    plot_pool = QtChart.QLineSeries()
+                    plot_pool = CustomedQLineSeries()
                     for k in timing:
                         if self.min_cal_lap <= k['lap'] <= self.max_cal_lap:
                             if k['lap'] not in pitlaps:
@@ -608,6 +579,9 @@ class Ui_Dialog(QtWidgets.QDialog):
                                     plot_pool.append(k['lap'], time0)
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     plot_pool.setName(name)
+                    plot_pool.clicked.connect(self.QLineClicked)
+                    plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                    plot_pool.hovered.connect(self.tooltip)
                     self.timegraph.addSeries(plot_pool)
 
         # x_axis = QtChart.QValueAxis()
@@ -629,7 +603,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         return
 
     def plotSpaceGapGraphQChart(self):
-        c = QtChart.QChart()
+        self.spacegapgraph = QtChart.QChart()
         if self.status == 'lap':
             timing_pools = []
             driver_pools = []
@@ -643,7 +617,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     driver_pools.append(driver)
             for i in range(len(timing_pools)):
                 for j in range(i + 1, len(timing_pools)):
-                    plot_pool = QtChart.QLineSeries()
+                    plot_pool = CustomedQLineSeries()
                     pitlaps = []
                     pitdata_i = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[i]['driverId'])
                     pitdata_j = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[j]['driverId'])
@@ -658,8 +632,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     for k in range(len(timing_pools[i])):
                         if self.min_cal_lap <= timing_pools[i][k]['lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
-                                    'lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
                                     time0 = timing_pools[i][k]['timeElapsed']
                                     time1 = timing_pools[j][k]['timeElapsed']
                                     delta_time = time0 - time1
@@ -675,7 +648,10 @@ class Ui_Dialog(QtWidgets.QDialog):
                     name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     plot_pool.setName(name0 + ' and ' + name1)
-                    c.addSeries(plot_pool)
+                    plot_pool.clicked.connect(self.QLineClicked)
+                    plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                    plot_pool.hovered.connect(self.tooltip)
+                    self.spacegapgraph.addSeries(plot_pool)
             # except Exception as e:
             #     print(e)
         elif self.status == 'stint':
@@ -704,7 +680,7 @@ class Ui_Dialog(QtWidgets.QDialog):
             for i in a.keys():
                 for j in a.keys():
                     if i > j:
-                        plot_pool = QtChart.QLineSeries()
+                        plot_pool = CustomedQLineSeries()
                         for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                             if lap in self.acctime[i].keys() and lap in self.acctime[j].keys():
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
@@ -715,12 +691,15 @@ class Ui_Dialog(QtWidgets.QDialog):
                                         diff = self.acctime[i][lap] - self.acctime[j][lap]
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
-                        c.addSeries(plot_pool)
-        c.createDefaultAxes()
-        self.chartView_2.setChart(c)
+                        plot_pool.clicked.connect(self.QLineClicked)
+                        plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                        plot_pool.hovered.connect(self.tooltip)
+                        self.spacegapgraph.addSeries(plot_pool)
+        self.spacegapgraph.createDefaultAxes()
+        self.chartView_2.setChart(self.spacegapgraph)
 
     def plotGapGraphQChart(self):
-        c = QtChart.QChart()
+        self.timegapgraph = QtChart.QChart()
         if self.status == 'lap':
             length = len(self.drivers)
             timing_pools = []
@@ -734,7 +713,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     driver_pools.append(driver)
             for i in range(len(timing_pools)):
                 for j in range(i + 1, len(timing_pools)):
-                    plot_pool = QtChart.QLineSeries()
+                    plot_pool = CustomedQLineSeries()
                     pitlaps = []
                     pitdata_i = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[i]['driverId'])
                     pitdata_j = self.db.getPitstopByRaceIdDriverId(self.raceId, driver_pools[j]['driverId'])
@@ -766,7 +745,10 @@ class Ui_Dialog(QtWidgets.QDialog):
                     name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     plot_pool.setName(name0 + ' and ' + name1)
-                    c.addSeries(plot_pool)
+                    plot_pool.clicked.connect(self.QLineClicked)
+                    plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                    plot_pool.hovered.connect(self.tooltip)
+                    self.timegapgraph.addSeries(plot_pool)
             # except Exception as e:
             #     print(e)
         elif self.status == 'stint':
@@ -796,7 +778,7 @@ class Ui_Dialog(QtWidgets.QDialog):
             for i in a.keys():
                 for j in a.keys():
                     if i > j:
-                        plot_pool = QtChart.QLineSeries()
+                        plot_pool = CustomedQLineSeries()
                         for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                             if lap in self.laptime[i].keys() and lap in self.laptime[j].keys():
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
@@ -807,9 +789,12 @@ class Ui_Dialog(QtWidgets.QDialog):
                                         diff = self.laptime[i][lap] - self.laptime[j][lap]
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
-                        c.addSeries(plot_pool)
-        c.createDefaultAxes()
-        self.chartView_3.setChart(c)
+                        plot_pool.clicked.connect(self.QLineClicked)
+                        plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                        plot_pool.hovered.connect(self.tooltip)
+                        self.timegapgraph.addSeries(plot_pool)
+        self.timegapgraph.createDefaultAxes()
+        self.chartView_3.setChart(self.timegapgraph)
 
     def plotAll(self):
         # print('-' * 20)
@@ -988,6 +973,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.plotAll()
 
     def initTable(self, drivers, raceId):
+        self.switchtab1_left()
         stint_data = self.db.getTyreStintByRaceId(raceId)
         if len(stint_data):
             self.initData()
@@ -1658,7 +1644,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0 dev"))
+        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0 dev2"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
