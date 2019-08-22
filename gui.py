@@ -1667,9 +1667,6 @@ if __name__ == "__main__":
 
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
-    # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
-    # Dialog.setStyleSheet(qssStyle)
-    # ui = Ui_Dialog(plot_type='matplotlib')
     ui = Ui_Dialog(plot_type='QtChart')
     ui.setupUi()
     ui.show()
