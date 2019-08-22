@@ -13,11 +13,70 @@ import bitarray
 import matplotlib.pyplot as plt
 import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
+from Widgets.Callout import Callout
+
+class CustomedQLineSeries(QtChart.QLineSeries):
+
+    Signal_name = QtCore.pyqtSignal(str)
+    Signal_name_hovered = QtCore.pyqtSignal(str)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.clicked.connect(self.emitname)
+        self.hovered.connect(self.highlighted)
+        self.hovered.connect(self.emitnameHovered)
+
+    def emitname(self):
+        self.Signal_name.emit(self.name())
+
+    def emitnameHovered(self):
+        self.Signal_name_hovered.emit(self.name())
+
+    def getAllpoints(self):
+        values = []
+        for i in range(self.count()):
+            values.append(self.at(i))
+        return values
+
+    def highlighted(self, point, state):
+        if state:
+            pen = self.pen()
+            pen.setWidth(5)
+            color = self.color()
+            pen.setBrush(color)
+            self.setPen(pen)
+        else:
+            pen = self.pen()
+            pen.setWidth(2)
+            color = self.color()
+            pen.setBrush(color)
+            self.setPen(pen)
 
 
-class Ui_Dialog(object):
+class CustomedQChartView(QtChart.QChartView):
 
-    def __init__(self,plot_type='QtChart'):
+    Signal_pos = QtCore.pyqtSignal(QtCore.QPointF)
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        self.setMouseTracking(True)
+
+    # def showTooltip(self, point, status):
+    #     self.m_tooltip = Callout()
+    #     self.m_tooltip.setText('fuck u pyqt5')
+    #     self.m_tooltip.setAnchor(point)
+    #     # self.m_tooltip.setZValue(11)
+    #     self.m_tooltip.updateGeometry()
+    #     self.m_tooltip.show()
+
+    # # def mouseMoveEvent(self, QMouseEvent):
+    # def onMouseMove(self):
+    #     self.Signal_pos.emit(self.cursor().pos())
+
+
+class Ui_Dialog(QtWidgets.QDialog):
+
+    def __init__(self, plot_type='QtChart', parent=None):
+        super().__init__(parent)
+        self.installEventFilter(self)
         self.plot_type = plot_type
         self.db = f1db()
         self.checkbox = []
@@ -51,6 +110,10 @@ class Ui_Dialog(object):
         self.laptime = {}
         self.acctime = {}
         self.name = {}
+        self.on_graph_lines = False
+        self.m_tooltip = None
+        self.hovered_name = None
+
 
     def initData(self):
         self.plot_list = []
@@ -59,6 +122,70 @@ class Ui_Dialog(object):
         self.laptime = {}
         self.acctime = {}
         self.name = {}
+
+    # def mouseMoveEvent(self, event):
+    #     print('pos:',str(event.pos().x()) + ',' + str(event.pos().y()))
+    #     print('localPos:',str(event.localPos().x()) + ',' + str(event.localPos().y()))
+    #     print('windowPos:',str(event.windowPos().x()) + ',' + str(event.windowPos().y()))
+    #     print('screenPos:',str(event.screenPos().x()) + ',' + str(event.screenPos().y()))
+    #
+    #     if self.on_graph_lines:
+    #         if self.m_tooltip is None:
+    #             self.m_tooltip = Callout()
+    #         self.m_tooltip.setText(str(self.timegraph.mapToValue(event.scenePos()).x())+','+str(self.timegraph.mapToValue(event.scenePos()).y()))
+    #         self.m_tooltip.setAnchor(self.timegraph.mapToValue(event.scenePos()))
+    #         self.m_tooltip.setZValue(11)
+    #         self.m_tooltip.updateGeometry()
+    #         self.m_tooltip.show()
+    #     else:
+    #         if self.m_tooltip is not None:
+    #             self.m_tooltip.hide()
+
+    def tooltip(self, point, state):
+        if state:
+            self.on_graph_lines = True
+            self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            self.setToolTip(self.hovered_name)
+        else:
+            self.on_graph_lines = False
+            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+            self.setToolTip('')
+
+
+    def incrop(self):
+        curop = self.windowOpacity()
+        if curop >= 1:
+            self.timer.timeout.disconnect()
+        else:
+            curop += 0.01
+            self.setWindowOpacity(curop)
+            self.repaint()
+
+    def decrop(self):
+        curop = self.windowOpacity()
+        # if curop <= 1
+        # set 1 to disable fade out effect when mouse leaves the window
+        if curop <= 0.9:
+            self.timer.timeout.disconnect()
+        else:
+            curop -= 0.01
+            self.setWindowOpacity(curop)
+            self.repaint()
+
+    def enterEvent(self, event):
+        self.timer = QtCore.QTimer()
+        self.timer.start(5)
+        self.timer.timeout.connect(self.incrop)
+
+
+
+    def leaveEvent(self, event):
+        self.timer = QtCore.QTimer()
+        self.timer.start(5)
+        self.timer.timeout.connect(self.decrop)
+
+    def storeHoveredName(self, name):
+        self.hovered_name = name
 
     def initialize(self):
         self.hide_pit_eelap = False
@@ -207,9 +334,11 @@ class Ui_Dialog(object):
                             pitlaps.append(pj['lap'])
                             pitlaps.append(pj['lap'] + 1)
                     for k in range(len(timing_pools[i])):
-                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap:
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k][
+                            'lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
+                                    'lap'] not in pitlaps:
                                     time0 = timing_pools[i][k]['timeElapsed']
                                     time1 = timing_pools[j][k]['timeElapsed']
                                     delta_time = time0 - time1
@@ -323,9 +452,11 @@ class Ui_Dialog(object):
                             pitlaps.append(pj['lap'])
                             pitlaps.append(pj['lap'] + 1)
                     for k in range(len(timing_pools[i])):
-                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k]['lap'] <= self.max_cal_lap :
+                        if timing_pools[i][k]['lap'] >= self.min_cal_lap and timing_pools[i][k][
+                            'lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
+                                    'lap'] not in pitlaps:
                                     time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
                                     time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
                                     delta_time = time0 - time1
@@ -408,7 +539,9 @@ class Ui_Dialog(object):
             self.canvas_2.draw()  #
 
     def plotTimeGraphQChart(self):
-        c = QtChart.QChart()
+        self.timegraph = QtChart.QChart()
+        self.timegraph.setAcceptHoverEvents(True)
+
         if self.status == 'stint':
             a = {}
             for i in self.plot_list:
@@ -435,18 +568,22 @@ class Ui_Dialog(object):
                 if i not in self.name.keys():
                     self.name[i] = self.db.getDriversByDriverID(self.drivers[i]['driverId'])[0]['surname']
             for k in a.keys():
-                plot_pool = QtChart.QLineSeries()
+                plot_pool = CustomedQLineSeries()
                 for lap in range(self.min_cal_lap, self.max_cal_lap + 1):
                     if lap in self.laptime[k].keys():
                         if lap not in self.pitlaps[k]:
                             time0 = self.laptime[k][lap]
+
                             plot_pool.append(lap, time0)
                         else:
                             if not self.hide_pit_eelap:
                                 time0 = self.laptime[k][lap]
                                 plot_pool.append(lap, time0)
                 plot_pool.setName(self.name[k])
-                c.addSeries(plot_pool)
+                plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
+                plot_pool.hovered.connect(self.tooltip)
+                # plot_pool.hovered.connect(self.chartView.showTooltip)
+                self.timegraph.addSeries(plot_pool)
         elif self.status == 'lap':
             length = len(self.drivers)
             for i in range(length):
@@ -471,7 +608,7 @@ class Ui_Dialog(object):
                                     plot_pool.append(k['lap'], time0)
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     plot_pool.setName(name)
-                    c.addSeries(plot_pool)
+                    self.timegraph.addSeries(plot_pool)
 
         # x_axis = QtChart.QValueAxis()
         # x_axis.setTickCount(6)
@@ -481,8 +618,15 @@ class Ui_Dialog(object):
         # y_axis.setMinorTickCount(6)
         # c.setAxisX(x_axis)
         # c.setAxisY(y_axis)
-        c.createDefaultAxes()
-        self.chartView.setChart(c)
+        self.timegraph.createDefaultAxes()
+        # self.m_coordX_timegraph = QtWidgets.QGraphicsSimpleTextItem(self.timegraph)
+        # self.m_coordX_timegraph.setPos(self.timegraph.size().width() / 2 - 50, self.timegraph.size().height())
+        # self.m_coordX_timegraph.setText("X: ")
+        # self.m_coordY_timegraph =QtWidgets.QGraphicsSimpleTextItem(self.timegraph)
+        # self.m_coordY_timegraph.setPos(self.timegraph.size().width() / 2 + 50, self.timegraph.size().height())
+        # self.m_coordY_timegraph.setText("Y: ")
+        self.chartView.setChart(self.timegraph)
+        return
 
     def plotSpaceGapGraphQChart(self):
         c = QtChart.QChart()
@@ -514,7 +658,8 @@ class Ui_Dialog(object):
                     for k in range(len(timing_pools[i])):
                         if self.min_cal_lap <= timing_pools[i][k]['lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
+                                    'lap'] not in pitlaps:
                                     time0 = timing_pools[i][k]['timeElapsed']
                                     time1 = timing_pools[j][k]['timeElapsed']
                                     delta_time = time0 - time1
@@ -604,17 +749,18 @@ class Ui_Dialog(object):
                     for k in range(len(timing_pools[i])):
                         if self.min_cal_lap <= timing_pools[i][k]['lap'] <= self.max_cal_lap:
                             try:
-                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k]['lap'] not in pitlaps:
+                                if timing_pools[i][k]['lap'] not in pitlaps and timing_pools[j][k][
+                                    'lap'] not in pitlaps:
                                     time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
                                     time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
                                     delta_time = time0 - time1
-                                    plot_pool.append(timing_pools[i][k]['lap'],delta_time)
+                                    plot_pool.append(timing_pools[i][k]['lap'], delta_time)
                                 else:
                                     if not self.hide_pit_eelap:
                                         time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
                                         time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
                                         delta_time = time0 - time1
-                                        plot_pool.append(timing_pools[i][k]['lap'],delta_time)
+                                        plot_pool.append(timing_pools[i][k]['lap'], delta_time)
                             except IndexError:
                                 pass
                     name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
@@ -665,7 +811,6 @@ class Ui_Dialog(object):
         c.createDefaultAxes()
         self.chartView_3.setChart(c)
 
-
     def plotAll(self):
         # print('-' * 20)
         if self.plot_type == 'QtChart':
@@ -687,7 +832,17 @@ class Ui_Dialog(object):
             text0 = 'Plot Graph(QtChart):' + str(time.time() - t0)
             # print(text0)
             self.label.setText(text0)
-            # self.label_5.setText('')
+            self.label_5.setText('')
+            self.label_5.repaint()
+
+            # self.chartView.setMouseTracking(True)
+            # self.chartView_2.setMouseTracking(True)
+            # self.chartView_3.setMouseTracking(True)
+            # self.tab.setMouseTracking(True)
+            # self.tab_2.setMouseTracking(True)
+            # self.tab_3.setMouseTracking(True)
+            # self.tabWidget.setMouseTracking(True)
+
         elif self.plot_type == 'matplotlib':
             t0 = time.time()
             self.plotTimeGraph()
@@ -705,7 +860,8 @@ class Ui_Dialog(object):
             print(text0)
             self.label.setText(text0)
             self.label_5.setText('')
-
+            self.label_5.repaint()
+        self.setMouseTracking(True)
 
     def hidePitChecked(self):
         boolean = self.checkBox.checkState()
@@ -1169,7 +1325,6 @@ class Ui_Dialog(object):
         for i in self.checkbox:
             i.clicked.connect(self.tyreClicked)
 
-
     def toggleButton(self):
         if self.radioButton.isChecked():
             self.plot_type = 'QtChart'
@@ -1191,14 +1346,14 @@ class Ui_Dialog(object):
             self.canvas_3.setVisible(True)
             self.plotAll()
 
-    def setupUi(self, Dialog):
-        Dialog.setObjectName("Dialog")
-        Dialog.resize(1366, 768)
+    def setupUi(self):
+        self.setObjectName("Dialog")
+        self.resize(1366, 768)
 
-        self.layoutWidget = QtWidgets.QWidget(Dialog)
+        self.layoutWidget = QtWidgets.QWidget(self)
         self.layoutWidget.setObjectName("layoutWidget")
 
-        self.gridLayout = QtWidgets.QGridLayout(Dialog)
+        self.gridLayout = QtWidgets.QGridLayout(self)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
 
@@ -1274,7 +1429,18 @@ class Ui_Dialog(object):
         self.gridLayout_2.addWidget(self.radioButton_2, 1, 3, 1, 1)
 
         self.gridLayout.addLayout(self.gridLayout_2, 2, 1, 1, 1)
-        self.tableWidget = QtWidgets.QTableWidget(self.layoutWidget)
+
+        self.tabWidget_2 = QtWidgets.QTabWidget(self.layoutWidget)
+        self.tabWidget_2.setObjectName("tabWidget_2")
+
+        self.tab_left_1 = QtWidgets.QWidget()
+        self.tab_left_1.setObjectName("tab_left_1")
+        self.gridLayout_tab_left_1 = QtWidgets.QGridLayout(self.tab_left_1)
+        self.gridLayout_tab_left_1.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_tab_left_1.setObjectName("gridLayout_tab_left_1")
+
+
+        self.tableWidget = QtWidgets.QTableWidget(self.tab_left_1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1283,7 +1449,19 @@ class Ui_Dialog(object):
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
-        self.gridLayout.addWidget(self.tableWidget, 1, 0, 1, 1)
+        self.tabWidget_2.addTab(self.tab_left_1, "")
+
+        self.tab_left_2 = QtWidgets.QWidget()
+        self.tab_left_2.setObjectName("tab_left_2")
+        self.gridLayout_tab_left_2 = QtWidgets.QGridLayout(self.tab_left_2)
+        self.gridLayout_tab_left_2.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_tab_left_2.setObjectName("gridLayout_tab_left_2")
+
+        self.tabWidget_2.addTab(self.tab_left_2, "")
+
+
+        self.gridLayout.addWidget(self.tabWidget_2, 1, 0, 1, 1)
+
         self.tabWidget = QtWidgets.QTabWidget(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -1291,6 +1469,7 @@ class Ui_Dialog(object):
         sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
         self.tabWidget.setSizePolicy(sizePolicy)
         self.tabWidget.setObjectName("tabWidget")
+        self.gridLayout_tab_left_1.addWidget(self.tableWidget, 0, 0, 1, 1)
 
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -1300,8 +1479,9 @@ class Ui_Dialog(object):
         self.gridLayout_tab_1.setObjectName("gridLayout_tab_1")
 
         # if self.plot_type == 'QtChart':
-        self.chartView = QtChart.QChartView(self.tab)
+        self.chartView = CustomedQChartView(self.tab)
         self.chartView.setObjectName("chartView")
+        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         self.gridLayout_tab_1.addWidget(self.chartView, 0, 0, 1, 1)
 
         # elif self.plot_type == 'matplotlib':
@@ -1310,13 +1490,25 @@ class Ui_Dialog(object):
         self.canvas.setObjectName("canvas")
         self.gridLayout_tab_1.addWidget(self.canvas, 0, 0, 1, 1)
 
-
         if self.plot_type == 'QtChart':
             self.chartView.setVisible(True)
+            # self.chartView.setMouseTracking(True)
             self.canvas.setVisible(False)
+            # self.canvas.setMouseTracking(False)
         else:
             self.chartView.setVisible(False)
+            # self.chartView.setMouseTracking(False)
             self.canvas.setVisible(True)
+            # self.canvas.setMouseTracking(True)
+
+        self.tableWidget_tab1 = QtWidgets.QTableWidget()
+        self.tableWidget_tab1.setSizePolicy(sizePolicy)
+        self.tableWidget_tab1.setObjectName("tableWidget_tab1")
+        self.tableWidget_tab1.setColumnCount(0)
+        self.tableWidget_tab1.setRowCount(0)
+        # self.gridLayout_tab_1.addWidget(self.tableWidget_tab1, 0, 1, 1, 1)
+        # self.gridLayout_tab_1.setColumnStretch(0, 2)
+        # self.gridLayout_tab_1.setColumnStretch(1, 1)
 
         self.tabWidget.addTab(self.tab, "")
 
@@ -1328,8 +1520,9 @@ class Ui_Dialog(object):
         self.gridLayout_tab_2.setObjectName("gridLayout_tab_2")
 
         # if self.plot_type == 'QtChart':
-        self.chartView_2 = QtChart.QChartView(self.tab_2)
+        self.chartView_2 = CustomedQChartView(self.tab_2)
         self.chartView_2.setObjectName("chartView_2")
+        self.chartView_2.setRenderHint(QtGui.QPainter.Antialiasing)
         self.gridLayout_tab_2.addWidget(self.chartView_2, 0, 0, 1, 1)
 
         # elif self.plot_type == 'matplotlib':
@@ -1345,6 +1538,15 @@ class Ui_Dialog(object):
             self.chartView_2.setVisible(False)
             self.canvas_2.setVisible(True)
 
+        self.tableWidget_tab2 = QtWidgets.QTableWidget()
+        self.tableWidget_tab2.setSizePolicy(sizePolicy)
+        self.tableWidget_tab2.setObjectName("tableWidget_tab2")
+        self.tableWidget_tab2.setColumnCount(0)
+        self.tableWidget_tab2.setRowCount(0)
+        # self.gridLayout_tab_2.addWidget(self.tableWidget_tab2, 0, 1, 1, 1)
+        # self.gridLayout_tab_2.setColumnStretch(0, 2)
+        # self.gridLayout_tab_2.setColumnStretch(1, 1)
+
         self.tabWidget.addTab(self.tab_2, "")
 
         self.tab_3 = QtWidgets.QWidget()
@@ -1354,8 +1556,9 @@ class Ui_Dialog(object):
         self.gridLayout_tab_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_tab_3.setObjectName("gridLayout_tab_3")
 
-        self.chartView_3 = QtChart.QChartView(self.tab_3)
+        self.chartView_3 = CustomedQChartView(self.tab_3)
         self.chartView_3.setObjectName("chartView_3")
+        self.chartView_3.setRenderHint(QtGui.QPainter.Antialiasing)
         self.gridLayout_tab_3.addWidget(self.chartView_3, 0, 0, 1, 1)
 
         # elif self.plot_type == 'matplotlib':
@@ -1370,6 +1573,15 @@ class Ui_Dialog(object):
         else:
             self.chartView_3.setVisible(False)
             self.canvas_3.setVisible(True)
+
+        self.tableWidget_tab3 = QtWidgets.QTableWidget()
+        self.tableWidget_tab3.setSizePolicy(sizePolicy)
+        self.tableWidget_tab3.setObjectName("tableWidget_tab1")
+        self.tableWidget_tab3.setColumnCount(0)
+        self.tableWidget_tab3.setRowCount(0)
+        # self.gridLayout_tab_3.addWidget(self.tableWidget_tab3, 0, 1, 1, 1)
+        # self.gridLayout_tab_3.setColumnStretch(0, 2)
+        # self.gridLayout_tab_3.setColumnStretch(1, 1)
 
         self.tabWidget.addTab(self.tab_3, "")
 
@@ -1433,8 +1645,6 @@ class Ui_Dialog(object):
         self.checkBox_2.clicked.connect(self.checkAll)
         self.radioButton.toggled.connect(self.toggleButton)
         self.radioButton_2.toggled.connect(self.toggleButton)
-        self.retranslateUi(Dialog)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
         self.spinBox.setEnabled(False)
         self.spinBox.setEnabled(False)
         self.spinBox_2.setEnabled(False)
@@ -1442,14 +1652,13 @@ class Ui_Dialog(object):
         self.spinBox.valueChanged.connect(self.changeStartLap)
         self.spinBox_2.valueChanged.connect(self.changeEndLap)
         self.radioButton.setChecked(True)
-
-        self.retranslateUi(Dialog)
+        self.retranslateUi()
         self.tabWidget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
+        QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self, Dialog):
+    def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "F1 Analyz v0.7.2"))
+        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0 dev"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
@@ -1460,11 +1669,11 @@ class Ui_Dialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Dialog", "Lap Time"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Dialog", "Speed Gap"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Dialog", "Car Gap"))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_left_1), _translate("Dialog", "Result"))
+        self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_left_2), _translate("Dialog", "Analyz"))
         self.pushButton.setText(_translate("Dialog", "Go"))
         self.radioButton.setText(_translate("Dialog", "QtChart"))
         self.radioButton_2.setText(_translate("Dialog", "Matplotlib"))
-
-
 
 
 if __name__ == "__main__":
@@ -1472,12 +1681,10 @@ if __name__ == "__main__":
 
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
     # qssStyle = CommonHelper.readQss('/home/arc/Downloads/QSS-master/AMOLED.qss')
     # Dialog.setStyleSheet(qssStyle)
     # ui = Ui_Dialog(plot_type='matplotlib')
     ui = Ui_Dialog(plot_type='QtChart')
-
-    ui.setupUi(Dialog)
-    Dialog.show()
+    ui.setupUi()
+    ui.show()
     sys.exit(app.exec_())
