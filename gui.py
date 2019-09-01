@@ -19,19 +19,11 @@ class CustomedQLineSeries(QtChart.QLineSeries):
     Signal_click_timing = QtCore.pyqtSignal(str,str,list,QtCore.QPointF,QtCore.QPointF,float,int)
     Signal_name_hovered = QtCore.pyqtSignal(str)
 
-    def setTimeA(self,lap,time):
-        self.timeA.append(QtCore.QPointF(lap,time))
-
-    def setTimeB(self,lap,time):
-        self.timeB.append(QtCore.QPointF(lap,time))
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.clicked.connect(self.emitclick)
         self.hovered.connect(self.highlighted)
         self.hovered.connect(self.emitnameHovered)
-        self.timeA = []
-        self.timeB = []
 
     def emitclick(self):
         self.Signal_click_timing.emit(self.name(),self.objectName(),self.getAllpoints(),self.getMaxpoint(),self.getMinpoint(),self.getAvgpoint(),self.getStintlength())
@@ -41,12 +33,6 @@ class CustomedQLineSeries(QtChart.QLineSeries):
 
     def getAllpoints(self):
         return list(self.pointsVector())
-
-    def getpointsA(self):
-        return self.timeA
-
-    def getpointsB(self):
-        return self.timeB
 
     def highlighted(self, point, state):
         if state:
@@ -95,6 +81,7 @@ class CustomedQLineSeries(QtChart.QLineSeries):
         if self.count():
             sum /= self.count()
         return sum
+
 
     def getStintlength(self):
         return self.count()
@@ -199,6 +186,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def QLineClickedTiming(self, name, objname, QPointslist, maxpt ,minpt ,avgval ,length):
 
+        self.clearDetailedTiming()
         self.label_left_1.setText("Fastest Lap")
         self.label_left_2.setText("Average Lap")
         self.label_left_3.setText("Slowest Lap")
@@ -214,26 +202,35 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def QLineClickedSpace(self, name, objname, QPointslist, maxpt,minpt,avgval,length):
 
-        self.switchtab2_left()
+        self.clearDetailedTiming()
+        # self.switchtab2_left()
         # self.setupDetailedTiming(QPointslist)
         # self.label_right_1.setText(self.ms2mssmmm(minpt.y()))
         # self.label_right_2.setText(self.ms2mssmmm(avgval))
         # self.label_right_3.setText(self.ms2mssmmm(maxpt.y()))
         # self.label_right_4.setText(str(length))
+        pass
 
-    def QLineClickedGap(self, name, objname, QPointslist, maxpt,minpt,avgval,length):
+    #         self.Signal_click_gap.emit(self.name(),self.objectName(),self.getpointsA(),self.getpointsB(),self.getAllpoints(),self.getMaxA(),self.getMinA(),self.getMaxB(),self.getMinB(),self.getStintlength())
+    def QLineClickedGap(self, name, objname, QPointslist, maxpt,minpt, avg ,length):
 
-        self.label_left_1.setText("Fastest Lap")
-        self.label_left_2.setText("Average Lap")
-        self.label_left_3.setText("Slowest Lap")
-        self.label_left_4.setText("Duration")
-        self.label_left_5.setText("Laptime Detail")
-        self.setupDetailedTiming(QPointslist, [name])
-        self.label_right_1.setText(self.ms2mssmmm(minpt.y()) + ' (lap ' + str(int(minpt.x())) + ', ' + name + ')')
-        self.label_right_2.setText(self.ms2mssmmm(avgval))
-        self.label_right_3.setText(self.ms2mssmmm(maxpt.y()) + ' (lap ' + str(int(maxpt.x())) + ', ' + name + ')')
-        self.label_right_4.setText(str(length))
-        self.switchtab2_left()
+        self.clearDetailedTiming()
+        # nameA = name.split(' and ')[0]
+        # nameB = name.split(' and ')[1]
+        # driverIdA = objname.split(' ')[1]
+        # driverIdB = objname.split(' ')[2]
+        # self.label_left_1.setText("Fastest Lap")
+        # self.label_left_2.setText("Slowest Lap")
+        # self.label_left_3.setText("Slowest Lap")
+        # self.label_left_4.setText("Duration")
+        # self.label_left_5.setText("Laptime Detail")
+        # self.setupDetailedTiming(QPointslist, [name])
+        # self.label_right_1.setText(self.ms2mssmmm(minptA.y()) + ' (lap ' + str(int(minptA.x())) + ', ' + nameA + ')'+' '+self.ms2mssmmm(minptB.y()) + ' (lap ' + str(int(minptB.x())) + ', ' + nameB + ')')
+        # self.label_right_2.setText(self.ms2mssmmm(avgval))
+        # self.label_right_2.setText(self.ms2mssmmm(maxptA.y()) + ' (lap ' + str(int(maxptA.x())) + ', ' + nameA + ')'+' '+self.ms2mssmmm(maxptB.y()) + ' (lap ' + str(int(maxptB.x())) + ', ' + nameB + ')')
+        # self.label_right_4.setText(str(length))
+        # self.switchtab2_left()
+        pass
 
 
     def setupDetailedTiming(self, QPointslist, name):
@@ -263,6 +260,8 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def clearDetailedTiming(self):
         self.detailedTiming.clear()
+        self.detailedTiming.setRowCount(0)
+        self.detailedTiming.setColumnCount(0)
         self.label_left_1.clear()
         self.label_left_2.clear()
         self.label_left_3.clear()
@@ -862,16 +861,12 @@ class Ui_Dialog(QtWidgets.QDialog):
                                     time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
                                     delta_time = time0 - time1
                                     plot_pool.append(timing_pools[i][k]['lap'], delta_time)
-                                    plot_pool.setTimeA(timing_pools[i][k]['lap'], time0)
-                                    plot_pool.setTimeB(timing_pools[i][k]['lap'], time1)
                                 else:
                                     if not self.hide_pit_eelap:
                                         time0 = self.mssmmm2ms(timing_pools[i][k]['time'])
                                         time1 = self.mssmmm2ms(timing_pools[j][k]['time'])
                                         delta_time = time0 - time1
                                         plot_pool.append(timing_pools[i][k]['lap'], delta_time)
-                                        plot_pool.setTimeA(timing_pools[i][k]['lap'], time0)
-                                        plot_pool.setTimeB(timing_pools[i][k]['lap'], time1)
                             except IndexError:
                                 pass
                     name0 = self.db.getDriversByDriverID(driver_pools[i]['driverId'])[0]['surname']
@@ -917,14 +912,10 @@ class Ui_Dialog(QtWidgets.QDialog):
                                 if lap not in self.pitlaps[i] and lap not in self.pitlaps[j]:
                                     diff = self.laptime[i][lap] - self.laptime[j][lap]
                                     plot_pool.append(lap, diff)
-                                    plot_pool.setTimeA(lap, self.laptime[i][lap])
-                                    plot_pool.setTimeB(lap, self.laptime[j][lap])
                                 else:
                                     if not self.hide_pit_eelap:
                                         diff = self.laptime[i][lap] - self.laptime[j][lap]
                                         plot_pool.append(lap, diff)
-                                        plot_pool.setTimeA(lap, self.laptime[i][lap])
-                                        plot_pool.setTimeB(lap, self.laptime[j][lap])
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
                         plot_pool.setObjectName('plotline_timegap ' + str(i) + ' ' + str(j))
                         plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
@@ -1834,7 +1825,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0 dev3"))
+        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0 dev4"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))

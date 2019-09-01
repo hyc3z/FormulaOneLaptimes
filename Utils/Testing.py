@@ -14,6 +14,10 @@ def testRunnable(filename,time_length):
         print(e)
 
 
+def testdb():
+    pass
+
+
 def test():
     testRunnable('gui.py',5)
 
