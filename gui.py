@@ -26,7 +26,7 @@ class CustomedQLineSeries(QtChart.QLineSeries):
         self.hovered.connect(self.emitnameHovered)
 
     def emitclick(self):
-        self.Signal_click_timing.emit(self.name(),self.objectName(),self.getAllpoints(),self.getMaxpoint(),self.getMinpoint(),self.getAvgpoint(),self.getStintlength())
+        self.Signal_click_timing.emit(self.name(),self.objectName(),self.getAllpoints(),self.getMaxY(),self.getMinY(),self.getAvgVal(),self.getStintlength())
 
     def emitnameHovered(self):
         self.Signal_name_hovered.emit(self.name())
@@ -48,7 +48,7 @@ class CustomedQLineSeries(QtChart.QLineSeries):
             pen.setBrush(color)
             self.setPen(pen)
 
-    def getMaxpoint(self):
+    def getMaxY(self):
         curval = 0
         curpt = None
         for i in self.getAllpoints():
@@ -56,12 +56,12 @@ class CustomedQLineSeries(QtChart.QLineSeries):
                 curpt = i
                 curval = i.y()
             else:
-                if i.y()>curval:
+                if i.y() > curval:
                     curpt = i
                     curval = i.y()
         return curpt
 
-    def getMinpoint(self):
+    def getMinY(self):
         curval = 0
         curpt = None
         for i in self.getAllpoints():
@@ -74,14 +74,39 @@ class CustomedQLineSeries(QtChart.QLineSeries):
                     curval = i.y()
         return curpt
 
-    def getAvgpoint(self):
+    def getAvgVal(self):
         sum = 0
         for i in self.getAllpoints():
             sum += i.y()
         if self.count():
             sum /= self.count()
         return sum
+    
+    def getMinX(self):
+        curval = 0
+        curpt = None
+        for i in self.getAllpoints():
+            if curpt is None:
+                curpt = i
+                curval = i.x()
+            else:
+                if i.x() < curval:
+                    curpt = i
+                    curval = i.x()
+        return curpt
 
+    def getMaxX(self):
+        curval = 0
+        curpt = None
+        for i in self.getAllpoints():
+            if curpt is None:
+                curpt = i
+                curval = i.x()
+            else:
+                if i.x() > curval:
+                    curpt = i
+                    curval = i.x()
+        return curpt
 
     def getStintlength(self):
         return self.count()
@@ -203,15 +228,70 @@ class Ui_Dialog(QtWidgets.QDialog):
     def QLineClickedSpace(self, name, objname, QPointslist, maxpt,minpt,avgval,length):
 
         self.clearDetailedTiming()
-        # self.switchtab2_left()
-        # self.setupDetailedTiming(QPointslist)
-        # self.label_right_1.setText(self.ms2mssmmm(minpt.y()))
-        # self.label_right_2.setText(self.ms2mssmmm(avgval))
-        # self.label_right_3.setText(self.ms2mssmmm(maxpt.y()))
-        # self.label_right_4.setText(str(length))
-        pass
+        self.detailedTiming.verticalHeader().setHidden(True)
+        nameA = name.split(' and ')[0]
+        nameB = name.split(' and ')[1]
+        lines_all = self.timegraph.findChildren(CustomedQLineSeries)
+        lineslist = []
+        for i in lines_all:
+            if i.name() == nameA or i.name() == nameB:
+                print(i.objectName(),i.name())
+                lineslist.append(i)
 
-    #         self.Signal_click_gap.emit(self.name(),self.objectName(),self.getpointsA(),self.getpointsB(),self.getAllpoints(),self.getMaxA(),self.getMinA(),self.getMaxB(),self.getMinB(),self.getStintlength())
+        if len(lineslist) == 2:
+            self.label_left_1.setText("Fastest Lap")
+            self.label_left_2.setText("Average Lap")
+            self.label_left_3.setText("Slowest Lap")
+            self.label_left_4.setText("Duration")
+            self.label_left_5.setText("Laptime Detail")
+            self.label_right_1.setText(self.ms2mssmmm(lineslist[0].getMinY().y()) + ' (lap ' + str(int(lineslist[0].getMinY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMinY().y())+ ' (lap ' + str(int(lineslist[1].getMinY().x()))+ ', ' + lineslist[1].name() + ') ')
+            self.label_right_2.setText(str(self.ms2mssmmm(lineslist[0].getAvgVal()))+ ', ' + lineslist[0].name() + '  ' + str(self.ms2mssmmm(lineslist[1].getAvgVal()))+ ', ' + lineslist[1].name())
+            self.label_right_3.setText(self.ms2mssmmm(lineslist[0].getMaxY().y()) + ' (lap ' + str(int(lineslist[0].getMaxY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMaxY().y())+ ' (lap ' + str(int(lineslist[1].getMaxY().x()))+ ', ' + lineslist[1].name() + ') ')
+            self.label_right_4.setText(str(lineslist[0].getStintlength())+ ', ' + lineslist[0].name() + '  ' + str(lineslist[1].getStintlength())+ ', ' + lineslist[1].name())
+            self.detailedTiming.setColumnCount(3)
+            self.detailedTiming.setRowCount(self.max_cal_lap-self.min_cal_lap+1)
+            header = ['Lap', lineslist[0].name() ,lineslist[1].name()]
+            self.detailedTiming.setHorizontalHeaderLabels(header)
+            pt0 = 0
+            pt1 = 0
+            pts0 = lineslist[0].getAllpoints()
+            pts1 = lineslist[1].getAllpoints()
+            rowcount = 0
+            min_lap = int(min(lineslist[0].getMinX().x(),lineslist[1].getMinX().x()))
+            max_lap = int(max(lineslist[0].getMaxX().x(),lineslist[1].getMaxX().x()))
+            print(min_lap, lineslist[0].getMinX().x(),lineslist[1].getMinX().x())
+            for i in range(min_lap, max_lap+1):
+                item0 = QtWidgets.QTableWidgetItem(str(i))
+                # item0.setFont(font)
+                # item0.setBackground(color)
+                # item0.setForeground(QtGui.QColor(255, 255, 255))
+                item0.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                self.detailedTiming.setItem(rowcount, 0, item0)
+
+                if pt0 < len(pts0):
+                    if int(pts0[pt0].x()) == i:
+                        item1 = QtWidgets.QTableWidgetItem(self.ms2mssmmm(pts0[pt0].y()))
+                        # item1.setFont(font)
+                        # item1.setBackground(color)
+                        # item1.setForeground(QtGui.QColor(255, 255, 255))
+                        item1.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        self.detailedTiming.setItem(rowcount, 1, item1)
+                        pt0 += 1
+
+                if pt1 < len(pts1):
+                    if int(pts1[pt1].x()) == i:
+                        item2 = QtWidgets.QTableWidgetItem(self.ms2mssmmm(pts1[pt1].y()))
+                        # item2.setFont(font)
+                        # item2.setBackground(color)
+                        # item2.setForeground(QtGui.QColor(255, 255, 255))
+                        item2.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        self.detailedTiming.setItem(rowcount, 2, item2)
+                        pt1 += 1
+
+                rowcount += 1
+
+            self.switchtab2_left()
+
     def QLineClickedGap(self, name, objname, QPointslist, maxpt,minpt, avg ,length):
 
         self.clearDetailedTiming()
@@ -230,12 +310,13 @@ class Ui_Dialog(QtWidgets.QDialog):
         # self.label_right_2.setText(self.ms2mssmmm(maxptA.y()) + ' (lap ' + str(int(maxptA.x())) + ', ' + nameA + ')'+' '+self.ms2mssmmm(maxptB.y()) + ' (lap ' + str(int(maxptB.x())) + ', ' + nameB + ')')
         # self.label_right_4.setText(str(length))
         # self.switchtab2_left()
-        pass
 
 
     def setupDetailedTiming(self, QPointslist, name):
+        self.detailedTiming.clear()
         self.detailedTiming.setColumnCount(len(name)+1)
         self.detailedTiming.setRowCount(len(QPointslist))
+        self.detailedTiming.verticalHeader().setHidden(True)
         header = ['Lap']
         for i in name:
             header.append(i)
@@ -873,7 +954,8 @@ class Ui_Dialog(QtWidgets.QDialog):
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     plot_pool.setName(name0 + ' and ' + name1)
                     plot_pool.setObjectName('plotline_timegap ' + str(i)+ ' '+ str(j))
-                    plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
+                    # plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
+                    plot_pool.Signal_click_timing.connect(self.QLineClickedSpace)
                     plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                     plot_pool.hovered.connect(self.tooltip)
                     self.timegapgraph.addSeries(plot_pool)
@@ -918,7 +1000,8 @@ class Ui_Dialog(QtWidgets.QDialog):
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
                         plot_pool.setObjectName('plotline_timegap ' + str(i) + ' ' + str(j))
-                        plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
+                        # plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
+                        plot_pool.Signal_click_timing.connect(self.QLineClickedSpace)
                         plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                         plot_pool.hovered.connect(self.tooltip)
                         self.timegapgraph.addSeries(plot_pool)
@@ -1088,6 +1171,8 @@ class Ui_Dialog(QtWidgets.QDialog):
         millisecond = int(time-minute*60000-second*1000)
         if minute >= 1:
             retstr = str(minute)+':'
+            if second<10:
+                retstr += '0'
         else:
             retstr = ''
         retstr += str(second)
@@ -1825,7 +1910,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0 dev4"))
+        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
