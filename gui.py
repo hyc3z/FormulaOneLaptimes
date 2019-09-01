@@ -240,14 +240,15 @@ class Ui_Dialog(QtWidgets.QDialog):
 
         if len(lineslist) == 2:
             self.label_left_1.setText("Fastest Lap")
-            self.label_left_2.setText("Average Lap")
-            self.label_left_3.setText("Slowest Lap")
+            self.label_left_2.setText("Slowest Lap")
+            self.label_left_3.setText("Average Lap")
             self.label_left_4.setText("Duration")
             self.label_left_5.setText("Laptime Detail")
+            spaces = 7 + len(str(int(lineslist[0].getMinY().x())))
             self.label_right_1.setText(self.ms2mssmmm(lineslist[0].getMinY().y()) + ' (lap ' + str(int(lineslist[0].getMinY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMinY().y())+ ' (lap ' + str(int(lineslist[1].getMinY().x()))+ ', ' + lineslist[1].name() + ') ')
-            self.label_right_2.setText(str(self.ms2mssmmm(lineslist[0].getAvgVal()))+ ', ' + lineslist[0].name() + '  ' + str(self.ms2mssmmm(lineslist[1].getAvgVal()))+ ', ' + lineslist[1].name())
-            self.label_right_3.setText(self.ms2mssmmm(lineslist[0].getMaxY().y()) + ' (lap ' + str(int(lineslist[0].getMaxY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMaxY().y())+ ' (lap ' + str(int(lineslist[1].getMaxY().x()))+ ', ' + lineslist[1].name() + ') ')
-            self.label_right_4.setText(str(lineslist[0].getStintlength())+ ', ' + lineslist[0].name() + '  ' + str(lineslist[1].getStintlength())+ ', ' + lineslist[1].name())
+            self.label_right_2.setText(self.ms2mssmmm(lineslist[0].getMaxY().y()) + ' (lap ' + str(int(lineslist[0].getMaxY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMaxY().y())+ ' (lap ' + str(int(lineslist[1].getMaxY().x()))+ ', ' + lineslist[1].name() + ') ')
+            self.label_right_3.setText(str(self.ms2mssmmm(lineslist[0].getAvgVal()))+ ' ,' + lineslist[0].name() + ' '*spaces + str(self.ms2mssmmm(lineslist[1].getAvgVal()))+ ', ' + lineslist[1].name())
+            self.label_right_4.setText(str(lineslist[0].getStintlength())+ ' ,' + lineslist[0].name()+' '*spaces + str(lineslist[1].getStintlength())+ ', ' + lineslist[1].name())
             self.detailedTiming.setColumnCount(3)
             self.detailedTiming.setRowCount(self.max_cal_lap-self.min_cal_lap+1)
             header = ['Lap', lineslist[0].name() ,lineslist[1].name()]
@@ -277,6 +278,13 @@ class Ui_Dialog(QtWidgets.QDialog):
                         item1.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
                         self.detailedTiming.setItem(rowcount, 1, item1)
                         pt0 += 1
+                    else:
+                        item1 = QtWidgets.QTableWidgetItem()
+                        # item1.setFont(font)
+                        # item1.setBackground(color)
+                        # item1.setForeground(QtGui.QColor(255, 255, 255))
+                        item1.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        self.detailedTiming.setItem(rowcount, 1, item1)
 
                 if pt1 < len(pts1):
                     if int(pts1[pt1].x()) == i:
@@ -287,6 +295,13 @@ class Ui_Dialog(QtWidgets.QDialog):
                         item2.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
                         self.detailedTiming.setItem(rowcount, 2, item2)
                         pt1 += 1
+                    else:
+                        item2 = QtWidgets.QTableWidgetItem()
+                        # item1.setFont(font)
+                        # item1.setBackground(color)
+                        # item1.setForeground(QtGui.QColor(255, 255, 255))
+                        item2.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        self.detailedTiming.setItem(rowcount, 2, item2)
 
                 rowcount += 1
 
@@ -1910,7 +1925,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.0"))
+        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.1"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
