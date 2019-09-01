@@ -7,118 +7,14 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets, QtChart
+from PyQt6 import QtCore, QtGui, QtWidgets, QtCharts
 from database_connector import f1db
 import bitarray
 import matplotlib.pyplot as plt
 import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FC
-
-class CustomedQLineSeries(QtChart.QLineSeries):
-
-    Signal_click_timing = QtCore.pyqtSignal(str,str,list,QtCore.QPointF,QtCore.QPointF,float,int)
-    Signal_name_hovered = QtCore.pyqtSignal(str)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.clicked.connect(self.emitclick)
-        self.hovered.connect(self.highlighted)
-        self.hovered.connect(self.emitnameHovered)
-
-    def emitclick(self):
-        self.Signal_click_timing.emit(self.name(),self.objectName(),self.getAllpoints(),self.getMaxY(),self.getMinY(),self.getAvgVal(),self.getStintlength())
-
-    def emitnameHovered(self):
-        self.Signal_name_hovered.emit(self.name())
-
-    def getAllpoints(self):
-        return list(self.pointsVector())
-
-    def highlighted(self, point, state):
-        if state:
-            pen = self.pen()
-            pen.setWidth(5)
-            color = self.color()
-            pen.setBrush(color)
-            self.setPen(pen)
-        else:
-            pen = self.pen()
-            pen.setWidth(2)
-            color = self.color()
-            pen.setBrush(color)
-            self.setPen(pen)
-
-    def getMaxY(self):
-        curval = 0
-        curpt = None
-        for i in self.getAllpoints():
-            if curpt is None:
-                curpt = i
-                curval = i.y()
-            else:
-                if i.y() > curval:
-                    curpt = i
-                    curval = i.y()
-        return curpt
-
-    def getMinY(self):
-        curval = 0
-        curpt = None
-        for i in self.getAllpoints():
-            if curpt is None:
-                curpt = i
-                curval = i.y()
-            else:
-                if i.y() < curval:
-                    curpt = i
-                    curval = i.y()
-        return curpt
-
-    def getAvgVal(self):
-        sum = 0
-        for i in self.getAllpoints():
-            sum += i.y()
-        if self.count():
-            sum /= self.count()
-        return sum
-    
-    def getMinX(self):
-        curval = 0
-        curpt = None
-        for i in self.getAllpoints():
-            if curpt is None:
-                curpt = i
-                curval = i.x()
-            else:
-                if i.x() < curval:
-                    curpt = i
-                    curval = i.x()
-        return curpt
-
-    def getMaxX(self):
-        curval = 0
-        curpt = None
-        for i in self.getAllpoints():
-            if curpt is None:
-                curpt = i
-                curval = i.x()
-            else:
-                if i.x() > curval:
-                    curpt = i
-                    curval = i.x()
-        return curpt
-
-    def getStintlength(self):
-        return self.count()
-
-class CustomedQChartView(QtChart.QChartView):
-
-    Signal_pos = QtCore.pyqtSignal(QtCore.QPointF)
-
-    def __init__(self,parent=None):
-        super().__init__(parent)
-        self.setMouseTracking(True)
-
+from CustomedWidgets.customed_qlineseries import CustomedQLineSeries
+from CustomedWidgets.customed_qchartview import CustomedQChartView
 
 class Ui_Dialog(QtWidgets.QDialog):
 
@@ -174,11 +70,11 @@ class Ui_Dialog(QtWidgets.QDialog):
     def tooltip(self, point, state):
         if state:
             self.on_graph_lines = True
-            self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
             self.setToolTip(self.hovered_name+'\n'+str(point.x())+','+str(point.y()))
         else:
             self.on_graph_lines = False
-            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+            self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
             self.setToolTip('')
 
 
@@ -248,9 +144,8 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.label_right_1.setText(self.ms2mssmmm(lineslist[0].getMinY().y()) + ' (lap ' + str(int(lineslist[0].getMinY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMinY().y())+ ' (lap ' + str(int(lineslist[1].getMinY().x()))+ ', ' + lineslist[1].name() + ') ')
             self.label_right_2.setText(self.ms2mssmmm(lineslist[0].getMaxY().y()) + ' (lap ' + str(int(lineslist[0].getMaxY().x())) + ', ' + lineslist[0].name() + ') ' + self.ms2mssmmm(lineslist[1].getMaxY().y())+ ' (lap ' + str(int(lineslist[1].getMaxY().x()))+ ', ' + lineslist[1].name() + ') ')
             self.label_right_3.setText(str(self.ms2mssmmm(lineslist[0].getAvgVal()))+ ' ,' + lineslist[0].name() + ' '*spaces + str(self.ms2mssmmm(lineslist[1].getAvgVal()))+ ', ' + lineslist[1].name())
-            self.label_right_4.setText(str(lineslist[0].getStintlength())+ ' ,' + lineslist[0].name()+' '*spaces + str(lineslist[1].getStintlength())+ ', ' + lineslist[1].name())
+            self.label_right_4.setText(str(lineslist[0].Count())+ ' ,' + lineslist[0].name()+' '*spaces + str(lineslist[1].Count())+ ', ' + lineslist[1].name())
             self.detailedTiming.setColumnCount(3)
-            self.detailedTiming.setRowCount(self.max_cal_lap-self.min_cal_lap+1)
             header = ['Lap', lineslist[0].name() ,lineslist[1].name()]
             self.detailedTiming.setHorizontalHeaderLabels(header)
             pt0 = 0
@@ -260,13 +155,14 @@ class Ui_Dialog(QtWidgets.QDialog):
             rowcount = 0
             min_lap = int(min(lineslist[0].getMinX().x(),lineslist[1].getMinX().x()))
             max_lap = int(max(lineslist[0].getMaxX().x(),lineslist[1].getMaxX().x()))
+            self.detailedTiming.setRowCount(max_lap-min_lap+1)
             print(min_lap, lineslist[0].getMinX().x(),lineslist[1].getMinX().x())
             for i in range(min_lap, max_lap+1):
                 item0 = QtWidgets.QTableWidgetItem(str(i))
                 # item0.setFont(font)
                 # item0.setBackground(color)
                 # item0.setForeground(QtGui.QColor(255, 255, 255))
-                item0.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                item0.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.detailedTiming.setItem(rowcount, 0, item0)
 
                 if pt0 < len(pts0):
@@ -275,7 +171,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                         # item1.setFont(font)
                         # item1.setBackground(color)
                         # item1.setForeground(QtGui.QColor(255, 255, 255))
-                        item1.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        item1.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                         self.detailedTiming.setItem(rowcount, 1, item1)
                         pt0 += 1
                     else:
@@ -283,7 +179,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                         # item1.setFont(font)
                         # item1.setBackground(color)
                         # item1.setForeground(QtGui.QColor(255, 255, 255))
-                        item1.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        item1.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                         self.detailedTiming.setItem(rowcount, 1, item1)
 
                 if pt1 < len(pts1):
@@ -292,7 +188,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                         # item2.setFont(font)
                         # item2.setBackground(color)
                         # item2.setForeground(QtGui.QColor(255, 255, 255))
-                        item2.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        item2.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                         self.detailedTiming.setItem(rowcount, 2, item2)
                         pt1 += 1
                     else:
@@ -300,7 +196,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                         # item1.setFont(font)
                         # item1.setBackground(color)
                         # item1.setForeground(QtGui.QColor(255, 255, 255))
-                        item2.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        item2.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                         self.detailedTiming.setItem(rowcount, 2, item2)
 
                 rowcount += 1
@@ -343,14 +239,14 @@ class Ui_Dialog(QtWidgets.QDialog):
             # item0.setBackground(color)
             # item0.setForeground(QtGui.QColor(255, 255, 255))
             item0.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.detailedTiming.setItem(rowcount, 0, item0)
             item1 = QtWidgets.QTableWidgetItem(self.ms2mssmmm((int(i.y()))))
             # item0.setFont(font)
             # item0.setBackground(color)
             # item0.setForeground(QtGui.QColor(255, 255, 255))
             item1.setFlags(
-                QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.detailedTiming.setItem(rowcount, 1, item1)
             rowcount += 1
 
@@ -728,7 +624,7 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.canvas_2.draw()  #
 
     def plotTimeGraphQChart(self):
-        self.timegraph = QtChart.QChart()
+        self.timegraph = QtCharts.QChart()
         self.timegraph.setAcceptHoverEvents(True)
 
         if self.status == 'stint':
@@ -770,7 +666,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 plot_pool.setName(self.name[k])
                 plot_pool.setObjectName('plotline_time '+str(k))
                 plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
-                plot_pool.Signal_click_timing.connect(self.QLineClickedTiming)
+                plot_pool.Signal_click.connect(self.QLineClickedTiming)
                 plot_pool.hovered.connect(self.tooltip)
                 # plot_pool.hovered.connect(self.chartView.showTooltip)
                 self.timegraph.addSeries(plot_pool)
@@ -799,7 +695,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     name = self.db.getDriversByDriverID(driver['driverId'])[0]['surname']
                     plot_pool.setName(name)
                     plot_pool.setObjectName('plotline_time ' + str(k))
-                    plot_pool.Signal_click_timing.connect(self.QLineClickedTiming)
+                    plot_pool.Signal_click.connect(self.QLineClickedTiming)
                     plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                     plot_pool.hovered.connect(self.tooltip)
                     self.timegraph.addSeries(plot_pool)
@@ -823,7 +719,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         return
 
     def plotSpaceGapGraphQChart(self):
-        self.spacegapgraph = QtChart.QChart()
+        self.spacegapgraph = QtCharts.QChart()
         if self.status == 'lap':
             timing_pools = []
             driver_pools = []
@@ -870,7 +766,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     plot_pool.setName(name0 + ' and ' + name1)
                     plot_pool.setObjectName('plotline_spacegap ' + str(i)+ ' '+ str(j))
-                    plot_pool.Signal_click_timing.connect(self.QLineClickedSpace)
+                    plot_pool.Signal_click.connect(self.QLineClickedSpace)
                     plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                     plot_pool.hovered.connect(self.tooltip)
                     self.spacegapgraph.addSeries(plot_pool)
@@ -914,7 +810,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
                         plot_pool.setObjectName('plotline_spacegap ' + str(i) + ' ' + str(j))
-                        plot_pool.Signal_click_timing.connect(self.QLineClickedSpace)
+                        plot_pool.Signal_click.connect(self.QLineClickedSpace)
                         plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                         plot_pool.hovered.connect(self.tooltip)
                         self.spacegapgraph.addSeries(plot_pool)
@@ -922,7 +818,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.chartView_2.setChart(self.spacegapgraph)
 
     def plotGapGraphQChart(self):
-        self.timegapgraph = QtChart.QChart()
+        self.timegapgraph = QtCharts.QChart()
         if self.status == 'lap':
             length = len(self.drivers)
             timing_pools = []
@@ -969,8 +865,8 @@ class Ui_Dialog(QtWidgets.QDialog):
                     name1 = self.db.getDriversByDriverID(driver_pools[j]['driverId'])[0]['surname']
                     plot_pool.setName(name0 + ' and ' + name1)
                     plot_pool.setObjectName('plotline_timegap ' + str(i)+ ' '+ str(j))
-                    # plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
-                    plot_pool.Signal_click_timing.connect(self.QLineClickedSpace)
+                    # plot_pool.Signal_click.connect(self.QLineClickedGap)
+                    plot_pool.Signal_click.connect(self.QLineClickedSpace)
                     plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                     plot_pool.hovered.connect(self.tooltip)
                     self.timegapgraph.addSeries(plot_pool)
@@ -1015,8 +911,8 @@ class Ui_Dialog(QtWidgets.QDialog):
                                         plot_pool.append(lap, diff)
                         plot_pool.setName(self.name[i] + ' and ' + self.name[j])
                         plot_pool.setObjectName('plotline_timegap ' + str(i) + ' ' + str(j))
-                        # plot_pool.Signal_click_timing.connect(self.QLineClickedGap)
-                        plot_pool.Signal_click_timing.connect(self.QLineClickedSpace)
+                        # plot_pool.Signal_click.connect(self.QLineClickedGap)
+                        plot_pool.Signal_click.connect(self.QLineClickedSpace)
                         plot_pool.Signal_name_hovered.connect(self.storeHoveredName)
                         plot_pool.hovered.connect(self.tooltip)
                         self.timegapgraph.addSeries(plot_pool)
@@ -1077,7 +973,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.setMouseTracking(True)
 
     def hidePitChecked(self):
-        boolean = self.checkBox.checkState()
+        boolean = self.checkBox.checkState() == QtCore.Qt.CheckState.Checked
         self.hide_pit_eelap = bool(boolean)
         # print(self.hide_pit_eelap)
         self.plotAll()
@@ -1095,26 +991,26 @@ class Ui_Dialog(QtWidgets.QDialog):
     def checkAll(self):
         self.checkBox_2.setEnabled(False)
         self.checkBox_2.repaint()
-        if self.checkBox_2.checkState():
+        if self.checkBox_2.checkState() == QtCore.Qt.CheckState.Checked:
             if self.status == 'stint':
                 plot_list = []
                 for i in self.checkbox:
-                    i.setCheckState(QtCore.Qt.Checked)
+                    i.setCheckState(QtCore.Qt.CheckState.Checked)
                     string = i.objectName().split('-')
                     plot_list.append(string)
                 self.plot_list = plot_list
             elif self.status == 'lap':
                 for i in range(self.tableWidget.rowCount()):
-                    self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.Checked)
+                    self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.CheckState.Checked)
                 self.laststate.setall(True)
         else:
             if self.status == 'stint':
                 for i in self.checkbox:
-                    i.setCheckState(QtCore.Qt.Unchecked)
+                    i.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 self.plot_list = []
             elif self.status == 'lap':
                 for i in range(self.tableWidget.rowCount()):
-                    self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.Unchecked)
+                    self.tableWidget.item(i, 0).setCheckState(QtCore.Qt.CheckState.Unchecked)
                 self.laststate.setall(False)
         self.plotAll()
         self.checkBox_2.setEnabled(True)
@@ -1158,7 +1054,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         curstate = bitarray.bitarray(length)
         curstate.setall(False)
         for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.item(i, 0).checkState():
+            if self.tableWidget.item(i, 0).checkState() == QtCore.Qt.CheckState.Checked:
                 curstate[i] = 1
         if bitarray.bitdiff(curstate, self.laststate):
             self.laststate = curstate
@@ -1214,7 +1110,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         plot_list = []
         for i in self.checkbox:
             # print(i.objectName())
-            if i.checkState():
+            if i.checkState() == QtCore.Qt.CheckState.Checked:
                 string = i.objectName().split('-')
                 plot_list.append(string)
         self.plot_list = plot_list
@@ -1236,14 +1132,14 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.lastplotedstate.setall(False)
             self.tableWidget.verticalHeader().setVisible(False)
             self.tableWidget.horizontalHeader().setStretchLastSection(False)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-            # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
-            # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
             # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
             self.tableWidget.setHorizontalHeaderLabels(['Code', 'Name', 'Grid', 'End', 'Pits', 'Tyre'])
             self.tableWidget.setRowCount(len(drivers))
@@ -1253,7 +1149,7 @@ class Ui_Dialog(QtWidgets.QDialog):
             for num in range(len(drivers)):
                 i = drivers[num]
                 # table_color = QtGui.QPalette()
-                # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
+                # table_color.setColor(QtGui.QPalette.ColorRole.Base, QtGui.QColor(0,0,0))
                 pitstops = self.db.getPitstopByRaceIdDriverId(raceId, i['driverId'])
                 pitstop_counts = len(pitstops)
                 font = QtGui.QFont()
@@ -1269,7 +1165,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
                 driver_detail = self.db.getDriversByDriverID(i['driverId'])
                 check = QtWidgets.QTableWidgetItem()
-                check.setCheckState(QtCore.Qt.Unchecked)
+                check.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 check.setBackground(color)
                 if finish_pos is not None:
                     if finish_pos == 1:
@@ -1293,7 +1189,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 if finish_pos is None:
                     item0.setForeground(QtGui.QColor(255, 255, 255))
                 item0.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 0, item0)
                 item1 = QtWidgets.QTableWidgetItem(driver_detail[0]['forename'] + ' ' + driver_detail[0]['surname'])
                 item1.setFont(font)
@@ -1301,7 +1197,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 if finish_pos is None:
                     item1.setForeground(QtGui.QColor(255, 255, 255))
                 item1.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 1, item1)
                 startpos = QtWidgets.QTableWidgetItem(str(start_pos))
                 startpos.setBackground(color)
@@ -1309,7 +1205,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 if finish_pos is None:
                     startpos.setForeground(QtGui.QColor(255, 255, 255))
                 startpos.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 2, startpos)
                 if finish_pos is not None:
                     finishpos = QtWidgets.QTableWidgetItem(str(finish_pos))
@@ -1317,7 +1213,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     if finish_status_Id == 2:
                         finishpos = QtWidgets.QTableWidgetItem("DSQ")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
                             or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
                             or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95 \
@@ -1325,44 +1221,44 @@ class Ui_Dialog(QtWidgets.QDialog):
                             or 135 <= finish_status_Id <= 137:
                         finishpos = QtWidgets.QTableWidgetItem("RET")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 62:
                         finishpos = QtWidgets.QTableWidgetItem("NC")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 77:
                         finishpos = QtWidgets.QTableWidgetItem("107")
                         check.setFlags(
-                            QtCore.Qt.ItemIsSelectable)
+                            QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 81:
                         finishpos = QtWidgets.QTableWidgetItem("DNQ")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 90:
                         finishpos = QtWidgets.QTableWidgetItem("NR")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 96:
                         finishpos = QtWidgets.QTableWidgetItem("EX")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 97:
                         finishpos = QtWidgets.QTableWidgetItem("DNPQ")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                 finishpos.setFont(font)
                 finishpos.setBackground(color)
                 if finish_pos is None:
                     finishpos.setForeground(QtGui.QColor(255, 255, 255))
                 finishpos.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 3, finishpos)
                 pitstops = QtWidgets.QTableWidgetItem(str(pitstop_counts))
-                # pitstops.setCheckState(QtCore.Qt.Unchecked)
+                # pitstops.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 pitstops.setFont(font)
                 pitstops.setBackground(color)
                 pitstops.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 if finish_pos is None:
                     pitstops.setForeground(QtGui.QColor(255, 255, 255))
                 self.tableWidget.setItem(rowcount, 4, pitstops)
@@ -1371,9 +1267,9 @@ class Ui_Dialog(QtWidgets.QDialog):
                 # tyre_stints = [{'lap_on':1,'laps':1,'tyre':0},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':2,'laps':18,'tyre':3},{'lap_on':20,'laps':32,'tyre':4},{'lap_on':52,'laps':54,'tyre':6},{'lap_on':106,'laps':60,'tyre':8}]
                 tyre_stints = self.db.getTyreStintsByRaceIdDriverId(raceId, i['driverId'])
                 layout_tyres = QtWidgets.QHBoxLayout()
-                layout_tyres.setAlignment(QtCore.Qt.AlignLeft)
+                layout_tyres.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
                 pal = QtGui.QPalette()
-                pal.setColor(QtGui.QPalette.Base, color)
+                pal.setColor(QtGui.QPalette.ColorRole.Base, color)
                 check_count = 0
                 for i in tyre_stints:
                     label_stint = QtWidgets.QLabel()
@@ -1386,17 +1282,17 @@ class Ui_Dialog(QtWidgets.QDialog):
                     stint_1 = QtWidgets.QCheckBox()
                     stint_1.setFixedWidth(30)
                     # stint_1.setFixedHeight(list_height)
-                    stint_1.setCheckState(QtCore.Qt.Unchecked)
+                    stint_1.setCheckState(QtCore.Qt.CheckState.Unchecked)
                     stint_1.setObjectName(str(rowcount) + '-' + str(5) + '-' + str(check_count))
                     self.checkbox.append(stint_1)
                     # print(self.checkbox)
                     check_count += 1
                     check_color = QtGui.QPalette()
-                    check_color.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
+                    check_color.setColor(QtGui.QPalette.ColorRole.Base, QtGui.QColor(255, 255, 255))
                     stint_1.setPalette(check_color)
-                    layout_tyres.addWidget(label_stint, QtCore.Qt.AlignLeft)
-                    layout_tyres.addWidget(laps_stint, QtCore.Qt.AlignLeft)
-                    layout_tyres.addWidget(stint_1, QtCore.Qt.AlignLeft)
+                    layout_tyres.addWidget(label_stint, QtCore.Qt.AlignmentFlag.AlignLeft)
+                    layout_tyres.addWidget(laps_stint, QtCore.Qt.AlignmentFlag.AlignLeft)
+                    layout_tyres.addWidget(stint_1, QtCore.Qt.AlignmentFlag.AlignLeft)
                 cellWidget = QtWidgets.QWidget()
                 cellWidget.setLayout(layout_tyres)
                 cellWidget.setAutoFillBackground(True)
@@ -1418,14 +1314,14 @@ class Ui_Dialog(QtWidgets.QDialog):
             self.lastplotedstate.setall(False)
             self.tableWidget.verticalHeader().setVisible(False)
             self.tableWidget.horizontalHeader().setStretchLastSection(False)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-            self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-            # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
-            # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            self.tableWidget.horizontalHeader().setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+            # self.tableWidget.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
             # self.tableWidget.setHorizontalHeaderLabels(['C', 'Code', 'Name', 'Grid', 'Result', 'Pitstops','Tyre'])
             self.tableWidget.setHorizontalHeaderLabels(['Checked', 'Code', 'Name', 'Grid', 'End', 'Pits'])
             self.tableWidget.setRowCount(len(drivers))
@@ -1435,7 +1331,7 @@ class Ui_Dialog(QtWidgets.QDialog):
             for num in range(len(drivers)):
                 i = drivers[num]
                 # table_color = QtGui.QPalette()
-                # table_color.setColor(QtGui.QPalette.Base, QtGui.QColor(0,0,0))
+                # table_color.setColor(QtGui.QPalette.ColorRole.Base, QtGui.QColor(0,0,0))
                 pitstops = self.db.getPitstopByRaceIdDriverId(raceId, i['driverId'])
                 pitstop_counts = len(pitstops)
                 font = QtGui.QFont()
@@ -1451,7 +1347,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 finish_status = self.db.getFinishStatusNameByStatusID(finish_status_Id)[0]['status']
                 driver_detail = self.db.getDriversByDriverID(i['driverId'])
                 check = QtWidgets.QTableWidgetItem()
-                check.setCheckState(QtCore.Qt.Unchecked)
+                check.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 check.setBackground(color)
                 if finish_pos is not None:
                     if finish_pos == 1:
@@ -1474,7 +1370,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 if finish_pos is None:
                     item0.setForeground(QtGui.QColor(255, 255, 255))
                 item0.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 1, item0)
                 item1 = QtWidgets.QTableWidgetItem(driver_detail[0]['forename'] + ' ' + driver_detail[0]['surname'])
                 item1.setFont(font)
@@ -1482,7 +1378,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 if finish_pos is None:
                     item1.setForeground(QtGui.QColor(255, 255, 255))
                 item1.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 2, item1)
                 startpos = QtWidgets.QTableWidgetItem(str(start_pos))
                 startpos.setBackground(color)
@@ -1490,7 +1386,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                 if finish_pos is None:
                     startpos.setForeground(QtGui.QColor(255, 255, 255))
                 startpos.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 3, startpos)
                 if finish_pos is not None:
                     finishpos = QtWidgets.QTableWidgetItem(str(finish_pos))
@@ -1498,7 +1394,7 @@ class Ui_Dialog(QtWidgets.QDialog):
                     if finish_status_Id == 2:
                         finishpos = QtWidgets.QTableWidgetItem("DSQ")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif 3 <= finish_status_Id <= 10 or 20 <= finish_status_Id <= 44 or 46 <= finish_status_Id <= 49 or finish_status_Id == 51 \
                             or finish_status_Id == 54 or finish_status_Id == 56 or 59 <= finish_status_Id <= 61 or 63 <= finish_status_Id <= 76 \
                             or 78 <= finish_status_Id <= 80 or 82 <= finish_status_Id <= 87 or finish_status_Id == 89 or 91 <= finish_status_Id <= 95 \
@@ -1506,51 +1402,51 @@ class Ui_Dialog(QtWidgets.QDialog):
                             or 135 <= finish_status_Id <= 137:
                         finishpos = QtWidgets.QTableWidgetItem("RET")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 62:
                         finishpos = QtWidgets.QTableWidgetItem("NC")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 77:
                         finishpos = QtWidgets.QTableWidgetItem("107")
                         check.setFlags(
-                            QtCore.Qt.ItemIsSelectable)
+                            QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 81:
                         finishpos = QtWidgets.QTableWidgetItem("DNQ")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 90:
                         finishpos = QtWidgets.QTableWidgetItem("NR")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 96:
                         finishpos = QtWidgets.QTableWidgetItem("EX")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                     elif finish_status_Id == 97:
                         finishpos = QtWidgets.QTableWidgetItem("DNPQ")
                         # check.setFlags(
-                        #     QtCore.Qt.ItemIsSelectable)
+                        #     QtCore.Qt.ItemFlag.ItemIsSelectable)
                 finishpos.setFont(font)
                 finishpos.setBackground(color)
                 if finish_pos is None:
                     finishpos.setForeground(QtGui.QColor(255, 255, 255))
                 finishpos.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 self.tableWidget.setItem(rowcount, 4, finishpos)
                 pitstops = QtWidgets.QTableWidgetItem(str(pitstop_counts))
-                # pitstops.setCheckState(QtCore.Qt.Unchecked)
+                # pitstops.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 pitstops.setFont(font)
                 pitstops.setBackground(color)
                 pitstops.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 if finish_pos is None:
                     pitstops.setForeground(QtGui.QColor(255, 255, 255))
                 self.tableWidget.setItem(rowcount, 5, pitstops)
                 check = QtWidgets.QTableWidgetItem()
-                check.setCheckState(QtCore.Qt.Unchecked)
+                check.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 check.setFlags(
-                    QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
+                    QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsUserCheckable)
                 check.setBackground(color)
                 self.tableWidget.setItem(rowcount, 0, check)
                 rowcount += 1
@@ -1594,7 +1490,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.label_2 = QtWidgets.QLabel(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
@@ -1602,7 +1498,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.label_2.setObjectName("label_2")
         self.gridLayout_2.addWidget(self.label_2, 0, 0, 1, 1)
         self.label_3 = QtWidgets.QLabel(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_3.sizePolicy().hasHeightForWidth())
@@ -1610,7 +1506,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.label_3.setObjectName("label_3")
         self.gridLayout_2.addWidget(self.label_3, 0, 2, 1, 1)
         self.spinBox = QtWidgets.QSpinBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.spinBox.sizePolicy().hasHeightForWidth())
@@ -1619,7 +1515,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.spinBox.setObjectName("spinBox")
         self.gridLayout_2.addWidget(self.spinBox, 0, 1, 1, 1)
         self.spinBox_2 = QtWidgets.QSpinBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.spinBox_2.sizePolicy().hasHeightForWidth())
@@ -1628,7 +1524,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.spinBox_2.setObjectName("spinBox_2")
         self.gridLayout_2.addWidget(self.spinBox_2, 0, 3, 1, 1)
         self.label_4 = QtWidgets.QLabel(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
@@ -1636,7 +1532,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.label_4.setObjectName("label_4")
         self.gridLayout_2.addWidget(self.label_4, 1, 0, 1, 1)
         self.checkBox = QtWidgets.QCheckBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
@@ -1645,7 +1541,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.gridLayout_2.addWidget(self.checkBox, 1, 1, 1, 1)
 
         self.radioButton = QtWidgets.QRadioButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
@@ -1654,7 +1550,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.gridLayout_2.addWidget(self.radioButton, 1, 2, 1, 1)
 
         self.radioButton_2 = QtWidgets.QRadioButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.checkBox.sizePolicy().hasHeightForWidth())
@@ -1675,7 +1571,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
 
         self.tableWidget = QtWidgets.QTableWidget(self.tab_left_1)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
@@ -1730,7 +1626,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.tabWidget_2, 1, 0, 1, 1)
 
         self.tabWidget = QtWidgets.QTabWidget(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
@@ -1748,7 +1644,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         # if self.plot_type == 'QtChart':
         self.chartView = CustomedQChartView(self.tab)
         self.chartView.setObjectName("chartView")
-        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.chartView.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         self.gridLayout_tab_1.addWidget(self.chartView, 0, 0, 1, 1)
 
         # elif self.plot_type == 'matplotlib':
@@ -1789,7 +1685,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         # if self.plot_type == 'QtChart':
         self.chartView_2 = CustomedQChartView(self.tab_2)
         self.chartView_2.setObjectName("chartView_2")
-        self.chartView_2.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.chartView_2.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         self.gridLayout_tab_2.addWidget(self.chartView_2, 0, 0, 1, 1)
 
         # elif self.plot_type == 'matplotlib':
@@ -1825,7 +1721,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
         self.chartView_3 = CustomedQChartView(self.tab_3)
         self.chartView_3.setObjectName("chartView_3")
-        self.chartView_3.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.chartView_3.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         self.gridLayout_tab_3.addWidget(self.chartView_3, 0, 0, 1, 1)
 
         # elif self.plot_type == 'matplotlib':
@@ -1856,7 +1752,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.comboBox = QtWidgets.QComboBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.comboBox.sizePolicy().hasHeightForWidth())
@@ -1865,7 +1761,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.comboBox.setObjectName("comboBox")
         self.horizontalLayout.addWidget(self.comboBox)
         self.comboBox_2 = QtWidgets.QComboBox(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.comboBox_2.sizePolicy().hasHeightForWidth())
@@ -1874,7 +1770,7 @@ class Ui_Dialog(QtWidgets.QDialog):
         self.comboBox_2.setObjectName("comboBox_2")
         self.horizontalLayout.addWidget(self.comboBox_2)
         self.pushButton = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
@@ -1925,7 +1821,7 @@ class Ui_Dialog(QtWidgets.QDialog):
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.1"))
+        self.setWindowTitle(_translate("Dialog", "F1 Analyz v0.8.2"))
         self.label.setText(_translate("Dialog", "Ready."))
         self.label_2.setText(_translate("Dialog", "StartLap:"))
         self.label_3.setText(_translate("Dialog", "FinishLap:"))
@@ -1952,9 +1848,8 @@ class Ui_Dialog(QtWidgets.QDialog):
 if __name__ == "__main__":
     import sys
 
-    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
     ui = Ui_Dialog(plot_type='QtChart')
     ui.setupUi()
     ui.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
